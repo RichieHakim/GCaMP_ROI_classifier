@@ -426,6 +426,18 @@ class SimCLR(object):
         # }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
         logging.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")
 
+
+class ContrastiveLearningViewGenerator(object):
+    """Take two random crops of one image as the query and key."""
+
+    def __init__(self, base_transform, n_views=2):
+        self.base_transform = base_transform
+        self.n_views = n_views
+
+    def __call__(self, x):
+        return [self.base_transform(x) for i in range(self.n_views)]
+
+
 class WindowedDataset(Dataset):
     def __init__(self, X_untiled, y_input, transform=None, target_transform=None):
         self.X_untiled = X_untiled # first dim will be subsampled from
@@ -475,6 +487,8 @@ def make_WindowedDataloader(X, y, batch_size=64, drop_last=True, transform=None,
                             )
     # dataloader.sample_shape = [dataloader.batch_size] + list(dataset[-win_range[0]][0].shape)
     return dataloader, dataset, sampler
+
+
 
 
 
