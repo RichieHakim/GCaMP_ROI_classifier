@@ -455,8 +455,8 @@ class WindowedDataset(Dataset):
         y_subset = self.y_input[idx]
         return X_subset_tiled, y_subset
 
-def make_WindowedDataloader(X, y, batch_size=64, drop_last=True, **kwargs_dataloader):
-    dataset = WindowedDataset(X, y)
+def make_WindowedDataloader(X, y, batch_size=64, drop_last=True, transform=None, **kwargs_dataloader):
+    dataset = WindowedDataset(X, y, transform=transform)
 
     # sampler = torch.utils.data.SubsetRandomSampler(dataset.usable_idx, generator=None)
     sampler = torch.utils.data.RandomSampler(dataset, replacement=False, num_samples=None, generator=None)
