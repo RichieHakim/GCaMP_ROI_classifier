@@ -318,6 +318,8 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 # from utils import save_config_file, accuracy, save_checkpoint
 
+from PIL import Image
+
 torch.manual_seed(0)
 
 
@@ -342,6 +344,8 @@ class SimCLR(object):
         labels = labels.to(self.args.device)
 
         features = F.normalize(features, dim=1)
+
+        # print('feat_dim', features.shape)
 
         similarity_matrix = torch.matmul(features, features.T)
         # assert similarity_matrix.shape == (
@@ -385,9 +389,11 @@ class SimCLR(object):
         for epoch_counter in range(self.args.epochs):
             for images, _ in tqdm(train_loader):
                 # print(images.shape)
-                # images = torch.cat(images, dim=0)
+                images = torch.cat(images, dim=0)
 
                 images = images.to(self.args.device)
+
+                # print('images.shape', images.shape)
 
                 with autocast(enabled=self.args.fp16_precision):
                     features = self.model(images)
@@ -445,6 +451,7 @@ class WindowedDataset(Dataset):
         # self.win_range = win_range
         self.n_samples = y_input.shape[0]
         # self.usable_idx = torch.arange(-self.win_range[0] , self.n_samples-self.win_range[1]+1)
+        self.transform = transform
         
         if X_untiled.shape[0] != y_input.shape[0]:
             raise ValueError('RH: X and y must have same first dimension shape')
@@ -465,7 +472,16 @@ class WindowedDataset(Dataset):
 #         self.check_bound_errors(idx)
         X_subset_tiled = self.X_untiled[idx]
         y_subset = self.y_input[idx]
-        return X_subset_tiled, y_subset
+
+        # print(X_subset_tiled.shape)
+
+        if self.transform:
+          pil_img = Image.fromarray(np.uint8(X_subset_tiled[0]*255))
+          X_returned = self.transform(pil_img)
+        else:
+          X_returned = X_subset_tiled
+
+        return X_returned, y_subset
 
 def make_WindowedDataloader(X, y, batch_size=64, drop_last=True, transform=None, **kwargs_dataloader):
     dataset = WindowedDataset(X, y, transform=transform)
@@ -482,11 +498,11 @@ def make_WindowedDataloader(X, y, batch_size=64, drop_last=True, transform=None,
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             drop_last=drop_last,
-                            sampler=sampler,
+                            # sampler=sampler,
                             **kwargs_dataloader,
                             )
     # dataloader.sample_shape = [dataloader.batch_size] + list(dataset[-win_range[0]][0].shape)
-    return dataloader, dataset, sampler
+    return dataloader, dataset#, sampler
 
 
 
