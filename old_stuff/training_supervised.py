@@ -15,13 +15,15 @@ def train_step( X_train_batch, y_train_batch,
                 ):
 
         optimizer.zero_grad()
+
         y_hat = model(X_train_batch)
         loss_train = criterion(y_hat, y_train_batch)
+
         loss_train.backward()
         optimizer.step()
         scheduler.step()
 
-        return loss_train.item(), y_hat
+        return loss_train.item()
 
 def epoch_step( dataloader, 
                 model, 
@@ -44,10 +46,10 @@ def epoch_step( dataloader,
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
         for i_transform in range(X_batch.shape[1]): # X_batch.shape[1] = number of transforms
-            loss, y_hat = train_step(X_batch[:,i_transform,...], y_batch, model, optimizer, criterion, scheduler)
+            loss = train_step(X_batch[:,i_transform,...], y_batch, model, optimizer, criterion, scheduler)
             loss_rolling_train.append(loss)
             if do_validation:
-                loss, y_hat = validation_Object.get_predictions()
+                loss = validation_Object.get_predictions()
                 loss_rolling_val.append(loss)
         if verbose>0:
             if i_batch%verbose_update_period == 0:

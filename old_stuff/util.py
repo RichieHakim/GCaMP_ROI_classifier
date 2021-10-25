@@ -280,10 +280,12 @@ class dataset_simCLR(Dataset):
         y_sample = self.y[idx]
         idx_sample = self.idx[idx]
 
-        X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
+        # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
+        X_sample_transformed = []
         if self.transform is not None:
             for ii in range(self.n_transforms):
-                X_sample_transformed[ii] = self.transform(self.X[idx_sample])
+                # X_sample_transformed[ii] = self.transform(self.X[idx_sample])
+                X_sample_transformed.append(self.transform(self.X[idx_sample]))
         else:
             X_sample_transformed = self.X[idx]
 

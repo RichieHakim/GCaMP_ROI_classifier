@@ -58,7 +58,7 @@ class LeNet1(Module):
 #             ReLU(),
 #             Dropout(dropout_prob*1),
             
-            Linear(in_features=256, out_features=6),
+            Linear(in_features=256, out_features=256),
             
             
 #             Linear(1296, 512),
