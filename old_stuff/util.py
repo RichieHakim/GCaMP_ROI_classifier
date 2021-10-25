@@ -270,7 +270,7 @@ class dataset_simCLR(Dataset):
                     If transform is None:
                         X_sample_transformed[batch_size, n_channels, height, width]
                     If transform is not None:
-                        X_sample_transformed[batch_size, n_transforms, n_channels, height, width]
+                        X_sample_transformed[n_transforms][batch_size, n_channels, height, width]
             y_sample (int):
                 Label(s) of the sample(s).
             idx_sample (int):
@@ -288,5 +288,7 @@ class dataset_simCLR(Dataset):
                 X_sample_transformed.append(self.transform(self.X[idx_sample]))
         else:
             X_sample_transformed = self.X[idx]
+        
+        # X_sample_transformed = torch.cat(X_sample_transformed, dim=0) #this is being done in the epoch loop currently
 
         return X_sample_transformed, y_sample, idx_sample

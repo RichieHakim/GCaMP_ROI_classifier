@@ -8,7 +8,7 @@ from torch.nn import Linear, ReLU, CrossEntropyLoss, Sequential, Conv2d, MaxPool
 # momentum_val = 0.9
 
 class LeNet1(Module):   
-    def __init__(self, dropout_prob, momentum_val):
+    def __init__(self, dropout_prob, momentum_val, n_output_features):
         super(LeNet1, self).__init__()
 
         self.cnn_layers = Sequential(
@@ -58,7 +58,7 @@ class LeNet1(Module):
 #             ReLU(),
 #             Dropout(dropout_prob*1),
             
-            Linear(in_features=256, out_features=256),
+            Linear(in_features=256, out_features=n_output_features),
             
             
 #             Linear(1296, 512),
