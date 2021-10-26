@@ -242,7 +242,7 @@ class dataset_simCLR(Dataset):
         self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
         self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
 
-        self.idx = torch.arange(self.X.shape[0])
+        self.idx = torch.arange(self.X.shape[0], device=DEVICE)
         self.n_samples = self.X.shape[0]
 
         self.transform = transform

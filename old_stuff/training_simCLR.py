@@ -6,7 +6,6 @@ from torch.autograd import Variable
 
 from sklearn.metrics import accuracy_score
 
-import matplotlib.pyplot as plt
 import time
 
 

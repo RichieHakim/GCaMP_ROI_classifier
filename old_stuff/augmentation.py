@@ -33,8 +33,8 @@ class AddGaussianNoise(Module):
         self.level_range = level_bounds[1] - level_bounds[0]
     def forward(self, tensor):
         if torch.rand(1) <= self.prob:
-            level = torch.rand(1) * self.level_range + self.level_bounds[0]
-            return (1-level)*tensor + level*(tensor + torch.randn(tensor.shape) * self.std + self.mean)
+            level = torch.rand(1, device=tensor.device) * self.level_range + self.level_bounds[0]
+            return (1-level)*tensor + level*(tensor + torch.randn(tensor.shape, device=tensor.device) * self.std + self.mean)
         else:
             return tensor
     def __repr__(self):
@@ -66,7 +66,7 @@ class AddPoissonNoise(Module):
         self.prob = prob
     def forward(self, tensor):
         if torch.rand(1) <= self.prob:
-            level = torch.rand(1) * self.level_range + self.level_bounds[0]
+            level = torch.rand(1, device=tensor.device) * self.level_range + self.level_bounds[0]
             return (1-level)*tensor + level*torch.poisson(tensor)
         else:
             return tensor
