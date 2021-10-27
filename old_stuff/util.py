@@ -100,7 +100,40 @@ def import_multiple_stat_files(paths_statFiles=None, dir_statFiles=None, fileNam
                                                  plot_pref=plot_pref)
                   for path_statFile in paths_statFiles]
     return sf_all_list
+
+def convert_multiple_stat_files(statFiles_list=None, statFiles_dict=None, out_height_width=[36,36], max_footprint_width=241, print_pref=False, plot_pref=False):
+    """
+    Converts multiple stat files to spatial footprints.
+    RH 2021
+
+    Args:
+        statFiles_list (list):
+            List of stat files.
+        out_height_width (list):
+            [height, width] of the output spatial footprints.
+        max_footprint_width (int):
+            Maximum width of the spatial footprints.
+        plot_pref (bool):
+            If True, plots the spatial footprints.
+    """
+    if statFiles_dict is None:
+        sf_all_list = [statFile_to_spatialFootprints(statFile=statFile,
+                                                    out_height_width=out_height_width,
+                                                    max_footprint_width=max_footprint_width,
+                                                    plot_pref=plot_pref)
+                    for statFile in statFiles_list]
+    else:
+        sf_all_list = []
+        for key, stat in statFiles_dict.items():
+            if print_pref:
+                print(key)
+            sf_all_list.append(statFile_to_spatialFootprints(statFile=stat,
+                                                    out_height_width=out_height_width,
+                                                    max_footprint_width=max_footprint_width,
+                                                    plot_pref=plot_pref))
+    return sf_all_list
     
+
 def import_multiple_label_files(paths_labelFiles=None, dir_labelFiles=None, fileNames_labelFiles=None, plot_pref=True):
     """
     Imports multiple label files.

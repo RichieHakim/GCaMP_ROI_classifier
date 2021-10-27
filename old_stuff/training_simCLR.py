@@ -116,12 +116,12 @@ def epoch_step( dataloader,
         X_batch = torch.cat(X_batch, dim=0)
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
-        for i_transform in range(X_batch.shape[1]): # X_batch.shape[1] = number of transforms
-            loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature)
-            loss_rolling_train.append(loss)
-            if do_validation:
-                loss = validation_Object.get_predictions()
-                loss_rolling_val.append(loss)
+        # for i_transform in range(X_batch.shape[1]): # X_batch.shape[1] = number of transforms
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature)
+        loss_rolling_train.append(loss)
+        if do_validation:
+            loss = validation_Object.get_predictions()
+            loss_rolling_val.append(loss)
         if verbose>0:
             if i_batch%verbose_update_period == 0:
                 print_info( batch=i_batch,
