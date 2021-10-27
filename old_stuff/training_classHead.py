@@ -3,6 +3,9 @@ import torch
 def train_head(HeadClass, model, X_train, y_train, **kwargs):
     '''
     Train a head regression model on the training set.
+
+    JZ 2021
+    
     Args:
         X_train: training features
         y_train: training labels
@@ -17,6 +20,9 @@ def train_head(HeadClass, model, X_train, y_train, **kwargs):
 def predict_head_proba(model, headmodel, X):
     '''
     Predict the label probabilities of the features using the model and the head model.
+
+    JZ 2021
+    
     Args:
         model: the trained model
         headmodel: the trained head model
@@ -29,6 +35,9 @@ def predict_head_proba(model, headmodel, X):
 def predict_head(model, headmodel, X):
     '''
     Predict the labels of the features using the model and the head model.
+
+    JZ 2021
+    
     Args:
         model: the trained model
         headmodel: the trained head model
@@ -41,6 +50,9 @@ def predict_head(model, headmodel, X):
 def get_simCLR_interim(model, X):
     '''
     Get the intermediate step of the model on the features.
+
+    JZ 2021
+    
     Args:
         model: the trained model
         X: the features
@@ -52,6 +64,9 @@ def get_simCLR_interim(model, X):
 def get_simCLR_output(model, X):
     '''
     Get the output of the model on the features.
+
+    JZ 2021
+
     Args:
         model: the trained model
         X: the features
