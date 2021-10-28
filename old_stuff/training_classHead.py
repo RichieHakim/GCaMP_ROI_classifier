@@ -1,6 +1,6 @@
 import torch
 
-def train_head(HeadClass, model, X_train, y_train, **kwargs):
+def train_head(model, SupervisedClass, X_train, y_train, **kwargs):
     '''
     Train a head regression model on the training set.
 
@@ -12,12 +12,12 @@ def train_head(HeadClass, model, X_train, y_train, **kwargs):
         **kwargs: keyword arguments to pass to the LogisticRegression class
     Returns: the trained model
     '''
-    head_interim = get_simCLR_interim(model, X_train)
-    logreg = HeadClass(**kwargs)
-    logreg.fit(head_interim, y_train)
-    return logreg
+    head_interim = get_simCLR_head(model, X_train)
+    head_model = SupervisedClass(**kwargs)
+    head_model.fit(head_interim, y_train)
+    return head_model
 
-def predict_head_proba(model, headmodel, X):
+def predict_proba(model, headmodel, X):
     '''
     Predict the label probabilities of the features using the model and the head model.
 
@@ -29,10 +29,10 @@ def predict_head_proba(model, headmodel, X):
         X: the features
     Returns: the predicted labels
     '''
-    head_interim = get_simCLR_interim(model, X)
+    head_interim = get_simCLR_head(model, X)
     return headmodel.predict_proba(head_interim)
 
-def predict_head(model, headmodel, X):
+def predict(model, headmodel, X):
     '''
     Predict the labels of the features using the model and the head model.
 
@@ -44,10 +44,10 @@ def predict_head(model, headmodel, X):
         X: the features
     Returns: the predicted labels
     '''
-    head_interim = get_simCLR_interim(model, X)
+    head_interim = get_simCLR_head(model, X)
     return headmodel.predict(head_interim)
 
-def get_simCLR_interim(model, X):
+def get_simCLR_head(model, X):
     '''
     Get the intermediate step of the model on the features.
 
