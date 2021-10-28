@@ -112,12 +112,13 @@ def epoch_step( dataloader,
     def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
         print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, lr: {learning_rate:.{precis}}')
 
-    for i_batch, (X_batch, y_batch, idx_batch) in enumerate(dataloader):
+    for i_batch, (X_batch, y_batch, idx_batch, sample_weight) in enumerate(dataloader):
         X_batch = torch.cat(X_batch, dim=0)
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
-        # for i_transform in range(X_batch.shape[1]): # X_batch.shape[1] = number of transforms
-        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature)
+        # Get batch weights
+        print('sample_weight', sample_weight)
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature) # Needs to take in weights
         loss_rolling_train.append(loss)
         if do_validation:
             loss = validation_Object.get_predictions()

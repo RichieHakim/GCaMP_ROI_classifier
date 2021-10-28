@@ -281,6 +281,9 @@ class dataset_simCLR(Dataset):
         self.transform = transform
         self.n_transforms = n_transforms
 
+        self.headmodel = None
+        self.class_weights = None
+
         if X.shape[0] != y.shape[0]:
             raise ValueError('RH Error: X and y must have same first dimension shape')
 
@@ -313,6 +316,15 @@ class dataset_simCLR(Dataset):
         y_sample = self.y[idx]
         idx_sample = self.idx[idx]
 
+        sample_weight = torch.tensor([1.0], device=self.X.device)
+
+        if self.headmodel is not None and self.headmodel.n_classes is not None:
+            prediction = self.headmodel.predict(self.X[idx_sample])
+            onehot_prediction = np.eye(self.headmodel.n_classes)[prediction]
+            sample_weight = onehot_prediction * self.class_weights
+            sample_weight = torch.tensor(sample_weight, device=self.X.device)
+            sample_weight = sample_weight.sum(axis=-1)
+
         # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
         X_sample_transformed = []
         if self.transform is not None:
@@ -324,4 +336,10 @@ class dataset_simCLR(Dataset):
         
         # X_sample_transformed = torch.cat(X_sample_transformed, dim=0) #this is being done in the epoch loop currently
 
-        return X_sample_transformed, y_sample, idx_sample
+        return X_sample_transformed, y_sample, idx_sample, sample_weight
+
+    def set_headmodel(self, headmodel):
+        self.headmodel = headmodel
+    def set_classweights(self, class_weights):
+        self.class_weights = class_weights
+    
