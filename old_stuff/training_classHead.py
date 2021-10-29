@@ -28,7 +28,7 @@ class HeadModel():
         self.headmodel = self.SupervisedClass(**kwargs)
         self.headmodel.fit(head_interim, y_train)
         self.is_trained = True
-        self.n_classes = np.max(y_train) + 1
+        self.n_classes = self.predict_proba(X_train[0:1]).shape[1]
         return self
 
     def predict_proba(self, X):
@@ -45,10 +45,12 @@ class HeadModel():
         '''
         if self.is_trained:
             head_interim = self.get_simCLR_head(X)
-            prediction = self.headmodel.predict_proba(head_interim)
+            # print('head_interim.shape',head_interim.shape)
+            proba = self.headmodel.predict_proba(head_interim)
+            # print('proba.shape',proba.shape)
         else:
-            prediction = None
-        return prediction
+            proba = None
+        return proba
 
     def predict(self, X):
         '''
@@ -64,7 +66,9 @@ class HeadModel():
         '''
         if self.is_trained:
             head_interim = self.get_simCLR_head(X)
+            # print('head_interim.shape',head_interim.shape)
             prediction = self.headmodel.predict(head_interim)
+            # print('prediction.shape',prediction.shape)
         else:
             prediction = None
         return prediction
@@ -80,8 +84,13 @@ class HeadModel():
             X: the features
         Returns: the intermediate step of the model
         '''
-        tensor_X = torch.tensor(X, dtype=torch.float)
-        return self.model.cnn_layers(tensor_X).squeeze().detach().numpy()
+        if type(X) == torch.Tensor:
+            X = X.clone().detach().float()
+            tensor_X = X
+        else:
+            # print(type(X))
+            tensor_X = torch.tensor(X, dtype=torch.float)
+        return self.model.cnn_layers(tensor_X).squeeze(-1).squeeze(-1).detach().numpy()
 
     def get_simCLR_output(self, X):
         '''
@@ -94,7 +103,12 @@ class HeadModel():
             X: the features
         Returns: the output of the model
         '''
-        tensor_X = torch.tensor(X, dtype=torch.float)
+        if type(X) == torch.Tensor:
+            X = X.clone().detach().float()
+            tensor_X = X
+        else:
+            # print(type(X))
+            tensor_X = torch.tensor(X, dtype=torch.float)
         return self.model(tensor_X).detach().numpy()
     
     def score(self, X, y):

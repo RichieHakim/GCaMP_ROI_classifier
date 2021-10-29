@@ -117,7 +117,6 @@ def epoch_step( dataloader,
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
         # Get batch weights
-        print('sample_weight', sample_weight)
         loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature) # Needs to take in weights
         loss_rolling_train.append(loss)
         if do_validation:
