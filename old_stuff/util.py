@@ -320,9 +320,10 @@ class dataset_simCLR(Dataset):
 
         if self.headmodel is not None and self.headmodel.n_classes is not None:
             proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
-            sample_weight = proba * self.class_weights
-            sample_weight = torch.tensor(sample_weight, device=self.X.device)
-            sample_weight = sample_weight.sum(axis=-1)
+            # sample_weight = proba * self.class_weights
+            # sample_weight = torch.tensor(sample_weight, device=self.X.device)
+            # sample_weight = sample_weight.sum(axis=-1)
+            sample_weight = loss_uncertainty(torch.tensor(proba), temperature=1, class_value=self.class_weights)
 
         # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
         X_sample_transformed = []
@@ -342,3 +343,39 @@ class dataset_simCLR(Dataset):
     def set_classweights(self, class_weights):
         self.class_weights = class_weights
     
+
+
+
+# def loss_uncertainty(proba, temperature, class_value):
+#     return (1/torch.norm(proba, dim=1)**temperature) * (proba @ class_value)
+
+# def loss_uncertainty(proba, temperature, class_value):
+#     return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
+
+def loss_uncertainty(proba, temperature=1, class_value=None):
+    if class_value is None:
+        class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
+    return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
+
+# if __name__ == '__main__':
+#     vecs = torch.tensor(np.array([[-1,0.5], [0.5, 1], [0.5, 0.5]]))
+
+#     queries = torch.stack(torch.meshgrid(torch.arange(-1.5,1.5, 0.02), torch.arange(-1.5,1.5, 0.02)), dim=-1)
+#     q_flat = queries.reshape(queries.shape[0]*queries.shape[1], -1)
+
+#     sims = (q_flat.double() @ vecs.T) / torch.outer(torch.norm(q_flat.double(), dim=1), torch.norm(vecs, dim=1))
+#     soft_temp = 10
+#     proba = torch.nn.functional.softmax(sims*soft_temp, dim=1)
+#     unc = loss_uncertainty(proba, temperature=1)
+
+#     plt.figure()
+#     plt.scatter(q_flat[:,0], q_flat[:,1], c=proba)
+#     plt.scatter(vecs[:,0], vecs[:,1], c='k')
+
+#     plt.figure()
+#     plt.scatter(q_flat[:,0], q_flat[:,1], c=unc)
+#     plt.scatter(vecs[:,0], vecs[:,1], c='k')
+
+
+
+

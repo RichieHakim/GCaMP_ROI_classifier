@@ -50,6 +50,8 @@ def train_step( X_train_batch, y_train_batch,
     loss_unreduced_train = criterion(logits, labels)
     loss_train = loss_unreduced_train.float() @ double_sample_weights.float()
 
+    print('double_sample_weights', double_sample_weights)
+
     loss_train.backward()
     optimizer.step()
     scheduler.step()
