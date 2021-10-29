@@ -48,9 +48,9 @@ def train_step( X_train_batch, y_train_batch,
     
     logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     loss_unreduced_train = criterion(logits, labels)
-    loss_train = loss_unreduced_train.float() @ double_sample_weights.float()
+    loss_train = loss_unreduced_train.float() @ double_sample_weights.float() / double_sample_weights.float().sum()
 
-    print('double_sample_weights', double_sample_weights)
+    # print('double_sample_weights', double_sample_weights)
 
     loss_train.backward()
     optimizer.step()
