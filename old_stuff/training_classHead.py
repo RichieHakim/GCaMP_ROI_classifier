@@ -7,6 +7,7 @@ class HeadModel():
 
         '''
         self.model = model
+        self.model_device = next(model.parameters()).device
         self.SupervisedClass = SupervisedClass
         
         self.is_trained = False
@@ -65,7 +66,7 @@ class HeadModel():
         Returns: the predicted labels
         '''
         if self.is_trained:
-            head_interim = self.get_simCLR_head(X)
+            head_interim = self.get_simCLR_head(X.to(self.model_device))
             # print('head_interim.shape',head_interim.shape)
             prediction = self.headmodel.predict(head_interim)
             # print('prediction.shape',prediction.shape)
@@ -84,13 +85,8 @@ class HeadModel():
             X: the features
         Returns: the intermediate step of the model
         '''
-        if type(X) == torch.Tensor:
-            X = X.clone().detach().float()
-            tensor_X = X
-        else:
-            # print(type(X))
-            tensor_X = torch.tensor(X, dtype=torch.float)
-        return self.model.cnn_layers(tensor_X).squeeze(-1).squeeze(-1).detach().numpy()
+        tensor_X = torch.as_tensor(X, dtype=torch.float, device = self.model_device)
+        return self.model.cnn_layers(tensor_X).squeeze(-1).squeeze(-1).detach().cpu().numpy()
 
     def get_simCLR_output(self, X):
         '''
@@ -104,12 +100,12 @@ class HeadModel():
         Returns: the output of the model
         '''
         if type(X) == torch.Tensor:
-            X = X.clone().detach().float()
+            X = X.clone().detach().float().cpu()
             tensor_X = X
         else:
             # print(type(X))
             tensor_X = torch.tensor(X, dtype=torch.float)
-        return self.model(tensor_X).detach().numpy()
+        return self.model(tensor_X).detach().cpu().numpy()
     
     def score(self, X, y):
         '''

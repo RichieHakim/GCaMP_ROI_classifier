@@ -50,7 +50,7 @@ def train_step( X_train_batch, y_train_batch,
     loss_unreduced_train = criterion(logits, labels)
     loss_train = loss_unreduced_train.float() @ double_sample_weights.float() / double_sample_weights.float().sum()
 
-    # print('double_sample_weights', double_sample_weights)
+    print('double_sample_weights', double_sample_weights)
 
     loss_train.backward()
     optimizer.step()
@@ -123,7 +123,7 @@ def epoch_step( dataloader,
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
         # Get batch weights
-        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, sample_weights) # Needs to take in weights
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
         loss_rolling_train.append(loss)
         if do_validation:
             loss = validation_Object.get_predictions()
