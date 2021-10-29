@@ -14,7 +14,7 @@ class HeadModel():
         self.is_trained = False
         self.n_classes = None
         self.std_scaler = None
-        self.device = DEVICE
+        self.device = self.model_device
     
     def fit(self, X_train, y_train, normalize=True, **kwargs):
         '''
