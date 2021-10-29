@@ -1,8 +1,9 @@
 import torch
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 class HeadModel():
-    def __init__(self, model, SupervisedClass):
+    def __init__(self, model, SupervisedClass, DEVICE=torch.device('cpu')):
         '''
 
         '''
@@ -12,8 +13,10 @@ class HeadModel():
         
         self.is_trained = False
         self.n_classes = None
+        self.std_scaler = None
+        self.device = DEVICE
     
-    def fit(self, X_train, y_train, **kwargs):
+    def fit(self, X_train, y_train, normalize=True, **kwargs):
         '''
         Train a head regression model on the training set.
 
@@ -25,11 +28,18 @@ class HeadModel():
             **kwargs: keyword arguments to pass to the LogisticRegression class
         Returns: the trained model
         '''
+        self.normalize = normalize
+
         head_interim = self.get_simCLR_head(X_train)
+        if normalize:
+            self.std_scaler = StandardScaler()
+            self.std_scaler.fit(head_interim)
+            head_interim = self.norm_head(head_interim)
         self.headmodel = self.SupervisedClass(**kwargs)
         self.headmodel.fit(head_interim, y_train)
         self.is_trained = True
         self.n_classes = self.predict_proba(X_train[0:1]).shape[1]
+
         return self
 
     def predict_proba(self, X):
@@ -46,6 +56,8 @@ class HeadModel():
         '''
         if self.is_trained:
             head_interim = self.get_simCLR_head(X)
+            if self.normalize:
+                head_interim = self.norm_head(head_interim)
             # print('head_interim.shape',head_interim.shape)
             proba = self.headmodel.predict_proba(head_interim)
             # print('proba.shape',proba.shape)
@@ -67,6 +79,8 @@ class HeadModel():
         '''
         if self.is_trained:
             head_interim = self.get_simCLR_head(X.to(self.model_device))
+            if self.normalize:
+                head_interim = self.norm_head(head_interim)
             # print('head_interim.shape',head_interim.shape)
             prediction = self.headmodel.predict(head_interim)
             # print('prediction.shape',prediction.shape)
@@ -74,7 +88,7 @@ class HeadModel():
             prediction = None
         return prediction
 
-    def get_simCLR_head(self, X):
+    def get_simCLR_head(self, X, normalize=True):
         '''
         Get the intermediate step of the model on the features.
 
@@ -88,7 +102,7 @@ class HeadModel():
         tensor_X = torch.as_tensor(X, dtype=torch.float, device = self.model_device)
         return self.model.cnn_layers(tensor_X).squeeze(-1).squeeze(-1).detach().cpu().numpy()
 
-    def get_simCLR_output(self, X):
+    def get_simCLR_output(self, X, normalize=True):
         '''
         Get the output of the model on the features.
 
@@ -99,14 +113,18 @@ class HeadModel():
             X: the features
         Returns: the output of the model
         '''
-        if type(X) == torch.Tensor:
-            X = X.clone().detach().float().cpu()
-            tensor_X = X
-        else:
-            # print(type(X))
-            tensor_X = torch.tensor(X, dtype=torch.float)
-        return self.model(tensor_X).detach().cpu().numpy()
+        tensor_X = torch.as_tensor(X, dtype=torch.float, device = self.model_device)
+        feed_through = self.model(tensor_X.to_device(self.device)).detach().cpu().numpy()
+        return feed_through
     
+    def norm_head(self, head):
+        '''
+        Normalize the head input.
+
+        JZ 2021
+        '''
+        return self.std_scaler.transform(head)
+
     def score(self, X, y):
         '''
         Score the model on the features and the labels.

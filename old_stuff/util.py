@@ -318,13 +318,15 @@ class dataset_simCLR(Dataset):
 
         sample_weight = torch.tensor([1.0], device=self.X.device)
 
+        # self.tmp = self.X[idx_sample:idx_sample+1]
+
         if self.headmodel is not None and self.headmodel.n_classes is not None:
             proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
             # sample_weight = proba * self.class_weights
             # sample_weight = torch.tensor(sample_weight, device=self.X.device)
             # sample_weight = sample_weight.sum(axis=-1)
-            sample_weight = loss_uncertainty(torch.tensor(proba), temperature=1, class_value=self.class_weights)
-
+            sample_weight = loss_uncertainty(torch.as_tensor(proba), temperature=1, class_value=self.class_weights)
+            # print(sample_weight)
         # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
         X_sample_transformed = []
         if self.transform is not None:
