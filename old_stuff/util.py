@@ -319,19 +319,7 @@ class dataset_simCLR(Dataset):
         sample_weight = torch.tensor([1.0], device=self.X.device)
 
         if self.headmodel is not None and self.headmodel.n_classes is not None:
-            # print('Hi!')
             proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
-            # prediction = np.argmax(proba, axis=1)
-            # # print('prediction',prediction)
-            # eye_val = np.eye(self.headmodel.n_classes)
-            # # print('eye_val', eye_val)
-            # onehot_prediction = eye_val[prediction]
-
-            # # print('onehot_prediction',onehot_prediction)
-            # # print('self.class_weights',self.class_weights)
-            # # print('prediction',prediction)
-
-            # sample_weight = onehot_prediction * self.class_weights
             sample_weight = proba * self.class_weights
             sample_weight = torch.tensor(sample_weight, device=self.X.device)
             sample_weight = sample_weight.sum(axis=-1)

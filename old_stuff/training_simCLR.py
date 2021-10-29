@@ -10,7 +10,7 @@ import time
 
 
 def train_step( X_train_batch, y_train_batch, 
-                model, optimizer, criterion, scheduler, temperature):
+                model, optimizer, criterion, scheduler, temperature, sample_weights):
     """
     Performs a single training step.
     RH 2021
@@ -39,12 +39,16 @@ def train_step( X_train_batch, y_train_batch,
             Loss of the current batch
     """
 
+
+    double_sample_weights = torch.tile(sample_weights.reshape(-1), (2,))
+
     optimizer.zero_grad()
 
     features = model(X_train_batch)
     
     logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
-    loss_train = criterion(logits, labels)
+    loss_unreduced_train = criterion(logits, labels)
+    loss_train = loss_unreduced_train.float() @ double_sample_weights.float()
 
     loss_train.backward()
     optimizer.step()
@@ -112,12 +116,12 @@ def epoch_step( dataloader,
     def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
         print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, lr: {learning_rate:.{precis}}')
 
-    for i_batch, (X_batch, y_batch, idx_batch, sample_weight) in enumerate(dataloader):
+    for i_batch, (X_batch, y_batch, idx_batch, sample_weights) in enumerate(dataloader):
         X_batch = torch.cat(X_batch, dim=0)
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
         # Get batch weights
-        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature) # Needs to take in weights
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, sample_weights) # Needs to take in weights
         loss_rolling_train.append(loss)
         if do_validation:
             loss = validation_Object.get_predictions()
