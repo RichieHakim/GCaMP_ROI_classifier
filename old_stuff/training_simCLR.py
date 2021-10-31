@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torch.cuda
@@ -39,16 +40,26 @@ def train_step( X_train_batch, y_train_batch,
             Loss of the current batch
     """
 
-
     double_sample_weights = torch.tile(sample_weights.reshape(-1), (2,))
+    contrastive_matrix_sample_weights = torch.cat((torch.ones(1, device=X_train_batch.device), double_sample_weights), dim=0)
+    # semi_double_sample_weights = torch.cat((sample_weights, sample_weights[1:]), dim=0)
+    # print(sample_weights)
+    # print(y_train_batch)
 
     optimizer.zero_grad()
 
     features = model(X_train_batch)
     
-    logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
-    loss_unreduced_train = criterion(logits, labels)
-    loss_train = loss_unreduced_train.float() @ double_sample_weights.float() / double_sample_weights.float().sum()
+    # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
+    logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
+    # loss_unreduced_train = criterion(logits, labels, weights=semi_double_sample_weights)
+    loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
+    loss_train = (loss_unreduced_train.float() @ double_sample_weights.float()) / double_sample_weights.float().sum()
+    # print(loss_unreduced_train[:100])
+    # print(double_sample_weights[:100])
+    # print(contrastive_matrix_sample_weights[:100])
+    # plt.figure()
+    # plt.imshow(logits[:,:20].cpu().detach(), aspect='auto', interpolation='none')
 
     # print('double_sample_weights', double_sample_weights)
 
@@ -253,6 +264,75 @@ def info_nce_loss(features, batch_size, n_views=2, temperature=0.5, DEVICE='cpu'
 
     logits = torch.cat([positives, negatives], dim=1) # logits column 1 is positives, the rest of the columns are negatives
     labels = torch.zeros(logits.shape[0], dtype=torch.long).to(DEVICE) # all labels are 0 because first column in logits is positives
+
+    logits = logits / temperature
+    return logits, labels
+
+
+# # from https://github.com/sthalles/SimCLR/blob/1848fc934ad844ae630e6c452300433fe99acfd9/simclr.py
+def richs_contrastive_matrix(features, batch_size, n_views=2, temperature=0.5, DEVICE='cpu'):
+    """
+    Modified 'Noise-Contrastice Estimation' loss. 
+    Almost identical to the method used in SimCLR.
+    InfoNCE loss. Aka: NTXentLoss or generalized NPairsLoss.
+    
+    logits and labels should be run through 
+     CrossEntropyLoss to complete the loss.
+    CURRENTLY ONLY WORKS WITH n_views=2 (I think this can be
+     extended to larger numbers by simply reshaping logits)
+
+    Code mostly copied from: https://github.com/sthalles/SimCLR/blob/1848fc934ad844ae630e6c452300433fe99acfd9/simclr.py
+    RH 2021
+
+    demo for learning/following shapes:
+        features = torch.rand(8, 100)
+        eye_prep = torch.cat([torch.arange(4) for i in range(2)], dim=0)
+        print(eye_prep)
+        multi_eye = (eye_prep.unsqueeze(0) == eye_prep.unsqueeze(1))
+        print(multi_eye)
+        features = torch.nn.functional.normalize(features, dim=1)
+        similarity_matrix = torch.matmul(features, features.T)
+        print(similarity_matrix)
+        single_eye = torch.eye(multi_eye.shape[0], dtype=torch.bool)
+        multi_cross_eye = multi_eye * ~single_eye
+        print(multi_cross_eye)
+        positives = similarity_matrix[multi_cross_eye.bool()].view(multi_cross_eye.shape[0], -1)
+        print(positives)
+        logits = torch.cat([positives, similarity_matrix*(~multi_eye)], dim=1)
+        print(logits)
+        labels = torch.zeros(logits.shape[0], dtype=torch.long)
+        print(labels)
+
+    Args:
+        features (torch.Tensor): 
+            Outputs of the model
+            Shape: (batch_size * n_views, n_channels, height, width)
+        batch_size (int):
+            Number of samples in the batch
+        n_views (int):
+            Number of views in the batch
+            MUST BE 2 (larger values not supported yet)
+        temperature (float):
+            Temperature term for the softmax
+        DEVICE (str):
+            Device to run the loss on
+    
+    Returns:
+        logits (torch.Tensor):
+            Class prediction logits
+            Shape: (batch_size * n_views, 1 + (batch_size * n_views))
+    """
+
+
+    eye_prep = torch.cat([torch.arange(batch_size) for i in range(n_views)], dim=0).to(DEVICE)
+    multi_eye = (eye_prep.unsqueeze(0) == eye_prep.unsqueeze(1))
+    features = torch.nn.functional.normalize(features, dim=1)
+    similarity_matrix = torch.matmul(features, features.T)
+    single_eye = torch.eye(multi_eye.shape[0], dtype=torch.bool).to(DEVICE)
+    multi_cross_eye = multi_eye * ~single_eye
+    positives = similarity_matrix[multi_cross_eye].view(multi_cross_eye.shape[0], -1)
+    logits = torch.cat([positives, similarity_matrix*(~multi_eye)], dim=1)
+    labels = torch.zeros(logits.shape[0], dtype=torch.long).to(DEVICE)
 
     logits = logits / temperature
     return logits, labels

@@ -219,6 +219,7 @@ class dataset_simCLR(Dataset):
                     X, 
                     y, 
                     n_transforms=2,
+                    class_weights=None,
                     transform=None,
                     DEVICE='cpu',
                     dtype_X=torch.float32,
@@ -282,7 +283,7 @@ class dataset_simCLR(Dataset):
         self.n_transforms = n_transforms
 
         self.headmodel = None
-        self.class_weights = None
+        self.class_weights = torch.as_tensor(class_weights, device=DEVICE)
 
         if X.shape[0] != y.shape[0]:
             raise ValueError('RH Error: X and y must have same first dimension shape')
@@ -316,17 +317,22 @@ class dataset_simCLR(Dataset):
         y_sample = self.y[idx]
         idx_sample = self.idx[idx]
 
-        sample_weight = torch.tensor([1.0], device=self.X.device)
-
         # self.tmp = self.X[idx_sample:idx_sample+1]
+        sample_weight = self.class_weights[y_sample]
+        # if self.headmodel is not None and self.headmodel.n_classes is not None:
+        #     proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
+        #     # sample_weight = proba * self.class_weights
+        #     # sample_weight = torch.tensor(sample_weight, device=self.X.device)
+        #     # sample_weight = sample_weight.sum(axis=-1)
+        #     # sample_weight = loss_uncertainty(torch.as_tensor(proba), temperature=3, class_value=self.class_weights)
+        #     sample_weight = self.class_weights[y_sample]
+        #     # print(sample_weight)
+        #     # print(proba)
+        #     # print(sample_weight)
+        # else:
+        #     # sample_weight = torch.tensor([1.0], device=self.X.device)
+        #     sample_weight = self.class_weights[y_sample]
 
-        if self.headmodel is not None and self.headmodel.n_classes is not None:
-            proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
-            # sample_weight = proba * self.class_weights
-            # sample_weight = torch.tensor(sample_weight, device=self.X.device)
-            # sample_weight = sample_weight.sum(axis=-1)
-            sample_weight = loss_uncertainty(torch.as_tensor(proba), temperature=1, class_value=self.class_weights)
-            # print(sample_weight)
         # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
         X_sample_transformed = []
         if self.transform is not None:
@@ -357,7 +363,8 @@ class dataset_simCLR(Dataset):
 def loss_uncertainty(proba, temperature=1, class_value=None):
     if class_value is None:
         class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
-    return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
+    # return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
+    return 1/(torch.norm(proba, dim=1)**temperature)
 
 # if __name__ == '__main__':
 #     vecs = torch.tensor(np.array([[-1,0.5], [0.5, 1], [0.5, 0.5]]))
