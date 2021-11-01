@@ -46,13 +46,15 @@ def train_step( X_train_batch, y_train_batch,
     # print(sample_weights)
     # print(y_train_batch)
 
+    # print(sample_weights.dtype)
+
     optimizer.zero_grad()
 
     features = model(X_train_batch)
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
-    # loss_unreduced_train = criterion(logits, labels, weights=semi_double_sample_weights)
+    # loss_unreduced_train = criterion(logits, labels)
     loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
     loss_train = (loss_unreduced_train.float() @ double_sample_weights.float()) / double_sample_weights.float().sum()
     # print(loss_unreduced_train[:100])
@@ -274,6 +276,11 @@ def richs_contrastive_matrix(features, batch_size, n_views=2, temperature=0.5, D
     """
     Modified 'Noise-Contrastice Estimation' loss. 
     Almost identical to the method used in SimCLR.
+    Should be techincally identical to InfoNCE, 
+     but the output logits matrix is different.
+    The output logits first column is the positives,
+     and the rest of the columns are the cosine 
+     similarities of the negatives (positives )
     InfoNCE loss. Aka: NTXentLoss or generalized NPairsLoss.
     
     logits and labels should be run through 

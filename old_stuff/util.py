@@ -8,6 +8,10 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
+import ctypes
+import multiprocessing as mp
+
+
 ###############################################################################
 ############################## IMPORT STAT FILES ##############################
 ###############################################################################
@@ -283,7 +287,13 @@ class dataset_simCLR(Dataset):
         self.n_transforms = n_transforms
 
         self.headmodel = None
-        self.class_weights = torch.as_tensor(class_weights, device=DEVICE)
+
+        self.net_model = None
+        self.classification_model = None
+        # self.class_weights = torch.as_tensor(class_weights, device=DEVICE)
+        self.class_weights = torch.as_tensor(class_weights, dtype=torch.float32, device=DEVICE)
+
+        # self.classModelParams_coef_ = mp.Array(np.ctypeslib.as_array(mp.Array(ctypes.c_float, feature)))
 
         if X.shape[0] != y.shape[0]:
             raise ValueError('RH Error: X and y must have same first dimension shape')
@@ -317,8 +327,24 @@ class dataset_simCLR(Dataset):
         y_sample = self.y[idx]
         idx_sample = self.idx[idx]
 
-        # self.tmp = self.X[idx_sample:idx_sample+1]
-        sample_weight = self.class_weights[y_sample]
+        if self.classification_model is not None:
+            # device_model = next(self.net_model.parameters())[0].device
+            features = self.net_model(self.X[idx][None,...])
+            # features = self.net_model.to('cpu')(self.X[idx][None,...].to('cpu'))
+            proba = self.classification_model.predict_proba(features.cpu().detach())[0]
+            # sample_weight = loss_uncertainty(proba, temperature=7)
+            # print(features.shape)
+            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=10)
+        else:
+            sample_weight = 1
+
+        # if idx%4000 == 0:
+        #     print(idx, sample_weight)
+            # print(self.test_array)
+            # print(self.classification_model)
+
+        # # self.tmp = self.X[idx_sample:idx_sample+1]
+        # # sample_weight = self.class_weights[idx]
         # if self.headmodel is not None and self.headmodel.n_classes is not None:
         #     proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
         #     # sample_weight = proba * self.class_weights
@@ -361,10 +387,12 @@ class dataset_simCLR(Dataset):
 #     return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
 
 def loss_uncertainty(proba, temperature=1, class_value=None):
-    if class_value is None:
-        class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
+    # if class_value is None:
+    #     class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
     # return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
-    return 1/(torch.norm(proba, dim=1)**temperature)
+    # print(proba.shape)
+    # return 1/(torch.norm(proba, dim=1)**temperature)
+    return 1/(torch.norm(proba)**temperature)
 
 # if __name__ == '__main__':
 #     vecs = torch.tensor(np.array([[-1,0.5], [0.5, 1], [0.5, 0.5]]))
