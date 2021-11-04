@@ -31,6 +31,7 @@ class AddGaussianNoise(Module):
         
         self.level_bounds = level_bounds
         self.level_range = level_bounds[1] - level_bounds[0]
+
     def forward(self, tensor):
         if torch.rand(1) <= self.prob:
             level = torch.rand(1, device=tensor.device) * self.level_range + self.level_bounds[0]
@@ -45,7 +46,7 @@ class AddPoissonNoise(Module):
     Adds Poisson noise to the input tensor.
     RH 2021
     """
-    def __init__(self, level_bounds=(0.,0.3), prob=1):
+    def __init__(self, scaler_bounds=(0.1,1), prob=1, base=10, scaling='log'):
         """
         Initializes the class.
 
@@ -57,17 +58,30 @@ class AddPoissonNoise(Module):
                  noise to add.
             prob (float):
                 The probability of adding noise at all.
+            scaler (float):
+                How much to scale the input by when passing
+                 torch.poisson; then undo the rescale in 
+                 the output.
+                Smaller values result in noisier outputs.\
+            scaling (str):
+                'linear' or 'log'
         """
         super().__init__()
 
-        self.level_bounds = level_bounds
-        self.level_range = level_bounds[1] - level_bounds[0]
-
         self.prob = prob
+        self.bounds = scaler_bounds
+        self.range = scaler_bounds[1] - scaler_bounds[0]
+        self.base = base
+        self.scaling = scaling
+
     def forward(self, tensor):
         if torch.rand(1) <= self.prob:
-            level = torch.rand(1, device=tensor.device) * self.level_range + self.level_bounds[0]
-            return (1-level)*tensor + level*torch.poisson(tensor)
+            if self.scaling == 'linear':
+                scaler = torch.rand(1, device=tensor.device) * self.range + self.bounds[0]
+                return torch.poisson(tensor * scaler) / scaler
+            else:
+                scaler = (((self.base**torch.rand(1, device=tensor.device) - 1)/(self.base-1)) * self.range) + self.bounds[0]
+                return torch.poisson(tensor * scaler) / scaler
         else:
             return tensor
     

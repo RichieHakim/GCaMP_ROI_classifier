@@ -277,10 +277,10 @@ class dataset_simCLR(Dataset):
                 torch.utils.data.Dataset object.
         """
 
-        # self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
-        self.X = torch.as_tensor(expand_channels(X), dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        # self.X = torch.as_tensor(expand_channels(X), dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
         self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
-
+        
         self.idx = torch.arange(self.X.shape[0], device=DEVICE)
         self.n_samples = self.X.shape[0]
 
@@ -365,9 +365,11 @@ class dataset_simCLR(Dataset):
         if self.transform is not None:
             for ii in range(self.n_transforms):
                 # X_sample_transformed[ii] = self.transform(self.X[idx_sample])
-                X_sample_transformed.append(self.transform(self.X[idx_sample]))
+                # X_sample_transformed.append(self.transform(self.X[idx_sample]))
+                X_sample_transformed.append(expand_channels(self.transform(self.X[idx_sample])))
         else:
-            X_sample_transformed = self.X[idx]
+            # X_sample_transformed = self.X[idx]
+            X_sample_transformed = expand_channels(self.X[idx_sample])
         
         # X_sample_transformed = torch.cat(X_sample_transformed, dim=0) #this is being done in the epoch loop currently
 
@@ -418,21 +420,20 @@ def loss_uncertainty(proba, temperature=1, class_value=None):
 
 
 
-def expand_channels(X_in, dim=1):
-  """
-  Expand dimension dim in X_in and tile to be 3 channels.
-  
-  JZ 2021
-  
-  Args:
-    X_in: numpy dataset
-    dim: int dimension to insert and tile
-  """
-  tile_dims = []
-  for tmp_dim in range(len(X_in.shape)+1):
-    if tmp_dim == dim:
-      tile_dims.append(3)
-    else:
-      tile_dims.append(1)
-  
-  return np.tile(np.expand_dims(X_in, axis=dim), tile_dims)
+def expand_channels(X_in):
+    """
+    Expand dimension dim in X_in and tile to be 3 channels.
+
+    JZ 2021 / RH 2021
+
+    Args:
+        X_in (torch.Tensor or np.ndarray):
+            Input image. 
+            Shape: [n_channels==1, height, width]
+
+    Returns:
+        X_out (torch.Tensor or np.ndarray):
+            Output image.
+            Shape: [n_channels==3, height, width]
+    """
+    return X_in.tile([3] + [1]*len(X_in.shape[1:]))
