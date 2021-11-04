@@ -277,7 +277,8 @@ class dataset_simCLR(Dataset):
                 torch.utils.data.Dataset object.
         """
 
-        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        # self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.X = torch.as_tensor(expand_channels(X), dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
         self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
 
         self.idx = torch.arange(self.X.shape[0], device=DEVICE)
@@ -391,8 +392,9 @@ def loss_uncertainty(proba, temperature=1, class_value=None):
     #     class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
     # return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
     # print(proba.shape)
-    # return 1/(torch.norm(proba, dim=1)**temperature)
-    return 1/(torch.norm(proba)**temperature)
+    # return 1/(torch.linalg.norm(proba, dim=1)**temperature)
+    return 1/(torch.linalg.norm(proba)**temperature)
+    # return 1-torch.sum((proba)**2)
 
 # if __name__ == '__main__':
 #     vecs = torch.tensor(np.array([[-1,0.5], [0.5, 1], [0.5, 0.5]]))
@@ -416,3 +418,21 @@ def loss_uncertainty(proba, temperature=1, class_value=None):
 
 
 
+def expand_channels(X_in, dim=1):
+  """
+  Expand dimension dim in X_in and tile to be 3 channels.
+  
+  JZ 2021
+  
+  Args:
+    X_in: numpy dataset
+    dim: int dimension to insert and tile
+  """
+  tile_dims = []
+  for tmp_dim in range(len(X_in.shape)+1):
+    if tmp_dim == dim:
+      tile_dims.append(3)
+    else:
+      tile_dims.append(1)
+  
+  return np.tile(np.expand_dims(X_in, axis=dim), tile_dims)
