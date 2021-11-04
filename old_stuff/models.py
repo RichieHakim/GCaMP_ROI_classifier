@@ -13,22 +13,22 @@ class LeNet1(Module):
 
         self.cnn_layers = Sequential(
             Conv2d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding=0),
-#             Tanh(),
-            ReLU(),
+            Tanh(),
+            # ReLU(),
 #             BatchNorm2d(6, momentum=momentum_val),
 #             AvgPool2d(kernel_size=2),           
             
             Conv2d(in_channels=16, out_channels=16, kernel_size=5, stride=1, padding=0),
             MaxPool2d(kernel_size=2, stride=2),           
-#             Tanh(),
-            ReLU(),
+            Tanh(),
+            # ReLU(),
 #             BatchNorm2d(16, momentum=momentum_val),
             # Dropout(dropout_prob*1),
             
             Conv2d(in_channels=16, out_channels=32, kernel_size=5, stride=1, padding=1),
             MaxPool2d(kernel_size=2, stride=2),           
-#             Tanh(),
-            ReLU(),
+            Tanh(),
+            # ReLU(),
 #             BatchNorm2d(16, momentum=momentum_val),
             # Dropout(dropout_prob*1),
 

@@ -334,7 +334,7 @@ class dataset_simCLR(Dataset):
             proba = self.classification_model.predict_proba(features.cpu().detach())[0]
             # sample_weight = loss_uncertainty(proba, temperature=7)
             # print(features.shape)
-            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=10)
+            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=6)
         else:
             sample_weight = 1
 
