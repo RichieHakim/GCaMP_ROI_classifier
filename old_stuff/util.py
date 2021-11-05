@@ -278,7 +278,6 @@ class dataset_simCLR(Dataset):
         """
 
         self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
-        # self.X = torch.as_tensor(expand_channels(X), dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
         self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
         
         self.idx = torch.arange(self.X.shape[0], device=DEVICE)
@@ -291,8 +290,7 @@ class dataset_simCLR(Dataset):
 
         self.net_model = None
         self.classification_model = None
-        # self.class_weights = torch.as_tensor(class_weights, device=DEVICE)
-        self.class_weights = torch.as_tensor(class_weights, dtype=torch.float32, device=DEVICE)
+        # self.class_weights = torch.as_tensor(class_weights, dtype=torch.float32, device=DEVICE)
 
         # self.classModelParams_coef_ = mp.Array(np.ctypeslib.as_array(mp.Array(ctypes.c_float, feature)))
 
@@ -329,98 +327,32 @@ class dataset_simCLR(Dataset):
         idx_sample = self.idx[idx]
 
         if self.classification_model is not None:
-            # device_model = next(self.net_model.parameters())[0].device
-            features = self.net_model(self.X[idx][None,...])
-            # features = self.net_model.to('cpu')(self.X[idx][None,...].to('cpu'))
+            features = self.net_model(tile_channels(self.X[idx][:,None,...], dim=1))
             proba = self.classification_model.predict_proba(features.cpu().detach())[0]
-            # sample_weight = loss_uncertainty(proba, temperature=7)
-            # print(features.shape)
             sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=6)
         else:
             sample_weight = 1
 
-        # if idx%4000 == 0:
-        #     print(idx, sample_weight)
-            # print(self.test_array)
-            # print(self.classification_model)
-
-        # # self.tmp = self.X[idx_sample:idx_sample+1]
-        # # sample_weight = self.class_weights[idx]
-        # if self.headmodel is not None and self.headmodel.n_classes is not None:
-        #     proba = self.headmodel.predict_proba(self.X[idx_sample:idx_sample+1])
-        #     # sample_weight = proba * self.class_weights
-        #     # sample_weight = torch.tensor(sample_weight, device=self.X.device)
-        #     # sample_weight = sample_weight.sum(axis=-1)
-        #     # sample_weight = loss_uncertainty(torch.as_tensor(proba), temperature=3, class_value=self.class_weights)
-        #     sample_weight = self.class_weights[y_sample]
-        #     # print(sample_weight)
-        #     # print(proba)
-        #     # print(sample_weight)
-        # else:
-        #     # sample_weight = torch.tensor([1.0], device=self.X.device)
-        #     sample_weight = self.class_weights[y_sample]
-
-        # X_sample_transformed = torch.empty(self.n_transforms, self.X.shape[1], self.X.shape[2], self.X.shape[3], dtype=self.X.dtype, device=self.X.device)
         X_sample_transformed = []
         if self.transform is not None:
             for ii in range(self.n_transforms):
-                # X_sample_transformed[ii] = self.transform(self.X[idx_sample])
-                # X_sample_transformed.append(self.transform(self.X[idx_sample]))
-                X_sample_transformed.append(expand_channels(self.transform(self.X[idx_sample])))
-        else:
-            # X_sample_transformed = self.X[idx]
-            X_sample_transformed = expand_channels(self.X[idx_sample])
-        
-        # X_sample_transformed = torch.cat(X_sample_transformed, dim=0) #this is being done in the epoch loop currently
 
+                X_sample_transformed.append(tile_channels(self.transform(self.X[idx_sample]), dim=0))
+        else:
+            X_sample_transformed = tile_channels(self.X[idx_sample], dim=0)
+        
         return X_sample_transformed, y_sample, idx_sample, sample_weight
 
-    def set_headmodel(self, headmodel):
-        self.headmodel = headmodel
-    def set_classweights(self, class_weights):
-        self.class_weights = class_weights
-    
 
-
-
-# def loss_uncertainty(proba, temperature, class_value):
-#     return (1/torch.norm(proba, dim=1)**temperature) * (proba @ class_value)
-
-# def loss_uncertainty(proba, temperature, class_value):
-#     return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
 
 def loss_uncertainty(proba, temperature=1, class_value=None):
     # if class_value is None:
     #     class_value = torch.ones(proba.shape[1], dtype=proba.dtype)
-    # return (proba @ class_value)/(torch.norm(proba, dim=1)**temperature)
-    # print(proba.shape)
-    # return 1/(torch.linalg.norm(proba, dim=1)**temperature)
+    # return (proba @ class_value)/(torch.linalg.norm(proba)**temperature)
     return 1/(torch.linalg.norm(proba)**temperature)
-    # return 1-torch.sum((proba)**2)
-
-# if __name__ == '__main__':
-#     vecs = torch.tensor(np.array([[-1,0.5], [0.5, 1], [0.5, 0.5]]))
-
-#     queries = torch.stack(torch.meshgrid(torch.arange(-1.5,1.5, 0.02), torch.arange(-1.5,1.5, 0.02)), dim=-1)
-#     q_flat = queries.reshape(queries.shape[0]*queries.shape[1], -1)
-
-#     sims = (q_flat.double() @ vecs.T) / torch.outer(torch.norm(q_flat.double(), dim=1), torch.norm(vecs, dim=1))
-#     soft_temp = 10
-#     proba = torch.nn.functional.softmax(sims*soft_temp, dim=1)
-#     unc = loss_uncertainty(proba, temperature=1)
-
-#     plt.figure()
-#     plt.scatter(q_flat[:,0], q_flat[:,1], c=proba)
-#     plt.scatter(vecs[:,0], vecs[:,1], c='k')
-
-#     plt.figure()
-#     plt.scatter(q_flat[:,0], q_flat[:,1], c=unc)
-#     plt.scatter(vecs[:,0], vecs[:,1], c='k')
 
 
-
-
-def expand_channels(X_in):
+def tile_channels(X_in, dim=0):
     """
     Expand dimension dim in X_in and tile to be 3 channels.
 
@@ -436,4 +368,6 @@ def expand_channels(X_in):
             Output image.
             Shape: [n_channels==3, height, width]
     """
-    return X_in.tile([3] + [1]*len(X_in.shape[1:]))
+    dims = [1]*len(X_in.shape)
+    dims[dim] = 3
+    return torch.tile(X_in, dims)
