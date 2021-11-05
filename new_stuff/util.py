@@ -179,7 +179,7 @@ def import_multiple_label_files(paths_labelFiles=None, dir_labelFiles=None, file
 class dataset_simCLR(Dataset):
     """    
     demo:
-
+    
     transforms = torch.nn.Sequential(
     torchvision.transforms.RandomHorizontalFlip(p=0.5),
     
@@ -232,7 +232,7 @@ class dataset_simCLR(Dataset):
         """
         Make a dataset from a list / numpy array / torch tensor
         of images and labels.
-        RH 2021
+        RH 2021 / JZ 2021
 
         Args:
             X (torch.Tensor / np.array / list of float32):
@@ -303,7 +303,7 @@ class dataset_simCLR(Dataset):
     def __getitem__(self, idx):
         """
         Retrieves and transforms a sample.
-        RH 2021
+        RH 2021 / JZ 2021
 
         Args:
             idx (int):

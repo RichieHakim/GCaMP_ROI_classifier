@@ -14,7 +14,7 @@ def train_step( X_train_batch, y_train_batch,
                 model, optimizer, criterion, scheduler, temperature, sample_weights):
     """
     Performs a single training step.
-    RH 2021
+    RH 2021 / JZ 2021
 
     Args:
         X_train_batch (torch.Tensor):
@@ -87,7 +87,7 @@ def epoch_step( dataloader,
                 ):
     """
     Performs an epoch step.
-    RH 2021
+    RH 2021 / JZ 2021
 
     Args:
         dataloader (torch.utils.data.DataLoader):
@@ -193,7 +193,7 @@ def info_nce_loss(features, batch_size, n_views=2, temperature=0.5, DEVICE='cpu'
      extended to larger numbers by simply reshaping logits)
 
     Code mostly copied from: https://github.com/sthalles/SimCLR/blob/1848fc934ad844ae630e6c452300433fe99acfd9/simclr.py
-    RH 2021
+    RH 2021 / JZ 2021
 
     demo for learning/following shapes:
         features = torch.rand(8, 100)
