@@ -45,12 +45,11 @@ def epoch_step( dataloader,
     for i_batch, (X_batch, y_batch, idx_batch) in enumerate(dataloader):
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
-        for i_transform in range(X_batch.shape[1]): # X_batch.shape[1] = number of transforms
-            loss = train_step(X_batch[:,i_transform,...], y_batch, model, optimizer, criterion, scheduler)
-            loss_rolling_train.append(loss)
-            if do_validation:
-                loss = validation_Object.get_predictions()
-                loss_rolling_val.append(loss)
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler)
+        loss_rolling_train.append(loss)
+        if do_validation:
+            loss = validation_Object.get_predictions()
+            loss_rolling_val.append(loss)
         if verbose>0:
             if i_batch%verbose_update_period == 0:
                 print_info( batch=i_batch,

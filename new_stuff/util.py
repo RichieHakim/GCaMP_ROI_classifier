@@ -371,3 +371,124 @@ def tile_channels(X_in, dim=0):
     dims = [1]*len(X_in.shape)
     dims[dim] = 3
     return torch.tile(X_in, dims)
+
+
+
+
+class dataset_supervised(Dataset):
+    """
+    """
+    def __init__(   self, 
+                    X, 
+                    y, 
+                    # n_transforms=2,
+                    class_weights=None,
+                    transform=None,
+                    DEVICE='cpu',
+                    dtype_X=torch.float32,
+                    dtype_y=torch.int64):
+
+        """
+        Make a dataset from a list / numpy array / torch tensor
+        of images and labels.
+        RH 2021 / JZ 2021
+
+        Args:
+            X (torch.Tensor / np.array / list of float32):
+                Images.
+                Shape: (n_samples, height, width)
+                Currently expects no channel dimension. If/when
+                 it exists, then shape should be
+                (n_samples, n_channels, height, width)
+            y (torch.Tensor / np.array / list of ints):
+                Labels.
+                Shape: (n_samples)
+            n_transforms (int):
+                Number of transformations to apply to each image.
+                Should be >= 1.
+            transform (callable, optional):
+                Optional transform to be applied on a sample.
+                See torchvision.transforms for more information.
+                Can use torch.nn.Sequential( a bunch of transforms )
+                 or other methods from torchvision.transforms. Try
+                 to use torch.jit.script(transform) if possible.
+                If not None:
+                 Transform(s) are applied to each image and the 
+                 output shape of X_sample_transformed for 
+                 __getitem__ will be
+                 (n_samples, n_transforms, n_channels, height, width)
+                If None:
+                 No transform is applied and output shape
+                 of X_sample_trasformed for __getitem__ will be 
+                 (n_samples, n_channels, height, width)
+                 (which is missing the n_transforms dimension).
+            DEVICE (str):
+                Device on which the data will be stored and
+                 transformed. Best to leave this as 'cpu' and do
+                 .to(DEVICE) on the data for the training loop.
+            dtype_X (torch.dtype):
+                Data type of X.
+            dtype_y (torch.dtype):
+                Data type of y.
+        
+        Returns:
+            torch.utils.data.Dataset:
+                torch.utils.data.Dataset object.
+        """
+
+        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
+        
+        self.idx = torch.arange(self.X.shape[0], device=DEVICE)
+        self.n_samples = self.X.shape[0]
+
+        self.transform = transform
+        # self.n_transforms = n_transforms
+
+        # self.headmodel = None
+
+        # self.net_model = None
+        # self.classification_model = None
+        # self.class_weights = torch.as_tensor(class_weights, dtype=torch.float32, device=DEVICE)
+
+        # self.classModelParams_coef_ = mp.Array(np.ctypeslib.as_array(mp.Array(ctypes.c_float, feature)))
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError('RH Error: X and y must have same first dimension shape')
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, idx):
+        """
+        Retrieves and transforms a sample.
+        RH 2021 / JZ 2021
+
+        Args:
+            idx (int):
+                Index / indices of the sample to retrieve.
+            
+        Returns:
+            X_sample_transformed (torch.Tensor):
+                Transformed sample(s).
+                Shape: 
+                    If transform is None:
+                        X_sample_transformed[batch_size, n_channels, height, width]
+                    If transform is not None:
+                        X_sample_transformed[n_transforms][batch_size, n_channels, height, width]
+            y_sample (int):
+                Label(s) of the sample(s).
+            idx_sample (int):
+                Index of the sample(s).
+        """
+
+        y_sample = self.y[idx]
+        idx_sample = self.idx[idx]
+
+        X_sample_transformed = []
+        if self.transform is not None:
+            X_sample_transformed = tile_channels(self.transform(self.X[idx_sample]), dim=0)
+        else:
+            X_sample_transformed = tile_channels(self.X[idx_sample], dim=0)
+        
+        return X_sample_transformed, y_sample, idx_sample
