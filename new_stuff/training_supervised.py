@@ -11,24 +11,28 @@ import time
 
 
 def train_step( X_train_batch, y_train_batch, 
-                model, optimizer, criterion, scheduler, 
+                model, optimizer, criterion, scheduler,
+                penalized_params, l2_alpha
                 ):
 
         optimizer.zero_grad()
 
         y_hat = model(X_train_batch)
-        loss_train = criterion(y_hat, y_train_batch)
+        loss_train = criterion[0](y_hat, y_train_batch)
+        loss_train += l2_alpha * torch.nn.MSELoss()(penalized_params,
+                                                    torch.zeros_like(penalized_params))
 
         loss_train.backward()
         optimizer.step()
-        scheduler.step()
+        # scheduler.step()
 
         return loss_train.item()
 
 def epoch_step( dataloader, 
                 model, 
                 optimizer, 
-                criterion, 
+                criterion,
+                penalized_params, l2_alpha,
                 scheduler=None, 
                 loss_rolling_train=[], 
                 device='cpu', 
@@ -45,7 +49,7 @@ def epoch_step( dataloader,
     for i_batch, (X_batch, y_batch, idx_batch) in enumerate(dataloader):
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
-        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler)
+        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, penalized_params, l2_alpha)
         loss_rolling_train.append(loss)
         if do_validation:
             loss = validation_Object.get_predictions()
