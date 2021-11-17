@@ -55,7 +55,11 @@ def train_step( X_train_batch, y_train_batch,
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     # loss_unreduced_train = criterion(logits, labels)
-    loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
+
+    # print('contrastive_matrix_sample_weights', contrastive_matrix_sample_weights)
+
+    # loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
+    loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, reduction='none')
     loss_train = (loss_unreduced_train.float() @ double_sample_weights.float()) / double_sample_weights.float().sum()
     # print(loss_unreduced_train[:100])
     # print(double_sample_weights[:100])
