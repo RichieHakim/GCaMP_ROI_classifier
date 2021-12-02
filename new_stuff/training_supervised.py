@@ -19,10 +19,10 @@ def train_step( X_train_batch, y_train_batch,
 
         y_hat = model(X_train_batch)
         loss_train = criterion[0](y_hat, y_train_batch)
-        loss_train += l2_alpha * torch.nn.MSELoss()(penalized_params,
+        loss_train_with_reg = loss_train + l2_alpha * torch.nn.MSELoss()(penalized_params,
                                                     torch.zeros_like(penalized_params))
 
-        loss_train.backward()
+        loss_train_with_reg.backward()
         optimizer.step()
         # scheduler.step()
 
@@ -40,7 +40,9 @@ def epoch_step( dataloader,
                 validation_Object=None,
                 loss_rolling_val=[],
                 verbose=False,
-                verbose_update_period=100
+                verbose_update_period=100,
+                X_val=None,
+                y_val=None
                 ):
 
     def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
@@ -51,18 +53,23 @@ def epoch_step( dataloader,
         y_batch = y_batch.to(device)
         loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, penalized_params, l2_alpha)
         loss_rolling_train.append(loss)
-        if do_validation:
+        if False and do_validation:
             loss = validation_Object.get_predictions()
             loss_rolling_val.append(loss)
         if verbose>0:
             if i_batch%verbose_update_period == 0:
+
+                if do_validation:
+                    loss_val = criterion[0](model(X_val), y_val)
+                    loss_rolling_val.append(loss_val)
+                    
                 print_info( batch=i_batch,
                             n_batches=len( dataloader),
                             loss_train=loss_rolling_train[-1],
                             loss_val=loss_rolling_val[-1],
                             learning_rate=scheduler.get_last_lr()[0],
                             precis=5)
-    return loss_rolling_train
+    return loss_rolling_train, loss_rolling_val
 
 class validation_Obj():
     def __init__(   self, 

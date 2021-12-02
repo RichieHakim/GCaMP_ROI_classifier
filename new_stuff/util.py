@@ -227,7 +227,9 @@ class dataset_simCLR(Dataset):
                     transform=None,
                     DEVICE='cpu',
                     dtype_X=torch.float32,
-                    dtype_y=torch.int64):
+                    dtype_y=torch.int64,
+                    temperature=1
+                    ):
 
         """
         Make a dataset from a list / numpy array / torch tensor
@@ -286,6 +288,8 @@ class dataset_simCLR(Dataset):
         self.transform = transform
         self.n_transforms = n_transforms
 
+        self.temperature = temperature
+
         self.headmodel = None
 
         self.net_model = None
@@ -332,7 +336,9 @@ class dataset_simCLR(Dataset):
             proba = self.classification_model.predict_proba(tile_channels(self.X[idx_sample][:,None,...], dim=1))[0]
             
             # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=6)
-            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=6)
+            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=8)
+            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=self.temperature)
+            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=1)
         else:
             sample_weight = 1
 

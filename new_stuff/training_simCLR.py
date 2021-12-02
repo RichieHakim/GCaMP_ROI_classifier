@@ -58,8 +58,8 @@ def train_step( X_train_batch, y_train_batch,
 
     # print('contrastive_matrix_sample_weights', contrastive_matrix_sample_weights)
 
-    # loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
-    loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, reduction='none')
+    loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, weight=contrastive_matrix_sample_weights, reduction='none')
+    # loss_unreduced_train = torch.nn.functional.cross_entropy(logits, labels, reduction='none')
     loss_train = (loss_unreduced_train.float() @ double_sample_weights.float()) / double_sample_weights.float().sum()
     # print(loss_unreduced_train[:100])
     # print(double_sample_weights[:100])
@@ -133,6 +133,7 @@ def epoch_step( dataloader,
     """
 
     def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
+        print('Here c')
         print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, lr: {learning_rate:.{precis}}')
 
     for i_batch, (X_batch, y_batch, idx_batch, sample_weights) in enumerate(dataloader):
@@ -146,7 +147,9 @@ def epoch_step( dataloader,
             loss = validation_Object.get_predictions()
             loss_rolling_val.append(loss)
         if verbose>0:
+            print('Here a')
             if i_batch%verbose_update_period == 0:
+                print('Here b')
                 print_info( batch=i_batch,
                             n_batches=len( dataloader),
                             loss_train=loss_rolling_train[-1],
