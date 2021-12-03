@@ -9,8 +9,10 @@ from sklearn.metrics import accuracy_score
 
 import time
 
+from . import util
 
-def train_step( X_train_batch, y_train_batch, 
+
+def train_step_simCLR( X_train_batch, y_train_batch, 
                 model, optimizer, criterion, scheduler, temperature, sample_weights):
     """
     Performs a single training step.
@@ -50,7 +52,7 @@ def train_step( X_train_batch, y_train_batch,
 
     optimizer.zero_grad()
 
-    features = model(X_train_batch)
+    features = model.forward_latent(X_train_batch)
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
@@ -75,6 +77,30 @@ def train_step( X_train_batch, y_train_batch,
 
     return loss_train.item()
 
+def L2_reg(model):
+    penalized_params = util.get_trainable_parameters(model)
+    penalty = 0
+    for ii,param in enumerate(penalized_params):
+        penalty += torch.sum(param**2)
+    return penalty
+
+def train_step_classifier( X_train_batch, y_train_batch, 
+                model, optimizer, criterion, scheduler,
+                L2_alpha
+                ):
+        penalized_params = util.get_trainable_parameters(model)
+        optimizer.zero_grad()
+
+        y_hat = model.forward_classifier(X_train_batch)
+        loss_train = criterion[0](y_hat, y_train_batch)
+        loss_train_with_reg = loss_train + L2_alpha*L2_reg(model)  # TODO: check if this is correct
+
+        loss_train_with_reg.backward()
+        optimizer.step()
+        scheduler.step()
+
+        return loss_train_with_reg.item()
+
 
 def epoch_step( dataloader, 
                 model, 
@@ -82,6 +108,8 @@ def epoch_step( dataloader,
                 criterion, 
                 scheduler=None, 
                 temperature=0.5,
+                L2_alpha=0.0, # TODO: implement for simCLR
+                mode='semi-supervised',
                 loss_rolling_train=[], 
                 device='cpu', 
                 do_validation=False,
@@ -112,6 +140,8 @@ def epoch_step( dataloader,
             Learning rate scheduler
         temperature (float):
             Temperature term for the softmax
+        mode (str):
+            'semi-supervised' or 'supervised'
         loss_rolling_train (list):
             List of losses for the current epoch
         device (str):
@@ -137,25 +167,30 @@ def epoch_step( dataloader,
     """
 
     def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
-        print('Here c')
         print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, lr: {learning_rate:.{precis}}')
 
     for i_batch, (X_batch, y_batch, idx_batch, sample_weights) in enumerate(dataloader):
+        # for param in util.get_trainable_parameters(model):
+        #     print(torch.linalg.norm(param))
+
         X_batch = torch.cat(X_batch, dim=0)
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
         # Get batch weights
-        loss = train_step(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
+        if mode == 'semi-supervised':
+            loss = train_step_simCLR(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
+        elif mode == 'supervised':
+            loss = train_step_classifier(X_batch, y_batch, model, optimizer, criterion, scheduler, L2_alpha=L2_alpha)
         loss_rolling_train.append(loss)
-        if False and do_validation:
-            loss = validation_Object.get_predictions()
-            loss_rolling_val.append(loss)
+        # if False and do_validation:
+        #     loss = validation_Object.get_predictions()
+        #     loss_rolling_val.append(loss)
         if verbose>0:
             if i_batch%verbose_update_period == 0:
 
-                if do_validation:
-                    loss_val = criterion[0](model(X_val), y_val)
-                    loss_rolling_val.append(loss_val)
+                # if do_validation:
+                #     loss_val = criterion[0](model(X_val), y_val)
+                #     loss_rolling_val.append(loss_val)
                     
                 print_info( batch=i_batch,
                             n_batches=len( dataloader),

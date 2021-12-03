@@ -1,6 +1,7 @@
 import pathlib
 import copy
 import pickle
+import glob
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -175,53 +176,53 @@ def import_multiple_label_files(paths_labelFiles=None, dir_labelFiles=None, file
 ############################### Directory functions ###########################
 ###############################################################################
 
-def query_directory(base_dir=r'\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Rich\data\res2p\scanimage data',
-                            query=r'stat.npy'):
-    '''
-    Find a file in a directory and its recursive subdirectories
+# def query_directory(base_dir=None,
+#                     query=None):
+#     '''
+#     Find a file in a directory and its recursive subdirectories
 
-    JZ 2021
+#     JZ 2021
 
-    Args:
-        base_dir: str
-            The base directory in which to start the search
-        query : str
-            The file name to look for in the subdirectories of base_dir
-    Returns:
-        A list of strings of full path directories to files named like the given file in question
-    '''
-    sub_base_dir = base_dir + r'/' if base_dir[-2:] != '/' else base_dir
+#     Args:
+#         base_dir: str
+#             The base directory in which to start the search
+#         query : str
+#             The file name to look for in the subdirectories of base_dir
+#     Returns:
+#         A list of strings of full path directories to files named like the given file in question
+#     '''
+#     sub_base_dir = base_dir + r'/' if base_dir[-2:] != '/' else base_dir
 
-    traversal_list = []
-    traversal_list.append(str(sub_base_dir))
+#     traversal_list = []
+#     traversal_list.append(str(sub_base_dir))
 
-    seen_values = []
+#     seen_values = []
 
-    counter = 1
+#     counter = 1
 
-    while True:
-        if len(traversal_list) == 0:
-            break
-        print(f'Currently Exploring Directory # {counter}')
-        directory = traversal_list.pop(0)
-        if query in directory:
-            seen_values.append(directory)
-        else:
-            traversal_list.extend(glob.glob(str(directory + r'/*')))
+#     while True:
+#         if len(traversal_list) == 0:
+#             break
+#         print(f'Currently Exploring Directory # {counter}')
+#         directory = traversal_list.pop(0)
+#         if query in directory:
+#             seen_values.append(directory)
+#         else:
+#             traversal_list.extend(glob.glob(str(directory + r'/*')))
 
-        counter += 1
+#         counter += 1
 
-    return seen_values
+#     return seen_values
 
-result = query_directory()
+# result = query_directory()
 
-paths_all = {}
-for path in result:
-    paths_all[path] = np.load(path, allow_pickle=True)
+# paths_all = {}
+# for path in result:
+#     paths_all[path] = np.load(path, allow_pickle=True)
     
-path_save = r'\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Rich\data\res2p\scanimage data\all_stat_files_20211022.pkl'
-with open(path_save, 'wb') as file:
-    pickle.dump(paths_all, file)
+# path_save = r'\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Rich\data\res2p\scanimage data\all_stat_files_20211022.pkl'
+# with open(path_save, 'wb') as file:
+#     pickle.dump(paths_all, file)
 
 
 ###############################################################################
@@ -281,7 +282,7 @@ class dataset_simCLR(Dataset):
                     DEVICE='cpu',
                     dtype_X=torch.float32,
                     dtype_y=torch.int64,
-                    temperature=1
+                    temp_uncertainty=1
                     ):
 
         """
@@ -341,7 +342,7 @@ class dataset_simCLR(Dataset):
         self.transform = transform
         self.n_transforms = n_transforms
 
-        self.temperature = temperature
+        self.temp_uncertainty = temp_uncertainty
 
         self.headmodel = None
 
@@ -388,10 +389,8 @@ class dataset_simCLR(Dataset):
             # proba = self.classification_model.predict_proba(features.cpu().detach())[0]
             proba = self.classification_model.predict_proba(tile_channels(self.X[idx_sample][:,None,...], dim=1))[0]
             
-            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32, device='cpu'), temperature=6)
-            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=8)
-            sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=self.temperature)
-            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=1)
+            # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=self.temp_uncertainty)
+            sample_weight = 1
         else:
             sample_weight = 1
 
@@ -554,3 +553,15 @@ class dataset_supervised(Dataset):
             X_sample_transformed = tile_channels(self.X[idx_sample], dim=0)
         
         return X_sample_transformed, y_sample, idx_sample
+
+###############################################################################
+############################## Model helpers ##################################
+###############################################################################
+
+def get_trainable_parameters(model):
+    
+    params_trainable = []
+    for param in list(model.parameters()):
+        if param.requires_grad:
+            params_trainable.append(param)
+    return params_trainable
