@@ -1,5 +1,6 @@
 import pathlib
 import copy
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -169,6 +170,58 @@ def import_multiple_label_files(paths_labelFiles=None, dir_labelFiles=None, file
             plt.hist(labels, 20)
             plt.title('labels ' + str(ii))
     return labels_all_list
+
+###############################################################################
+############################### Directory functions ###########################
+###############################################################################
+
+def query_directory(base_dir=r'\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Rich\data\res2p\scanimage data',
+                            query=r'stat.npy'):
+    '''
+    Find a file in a directory and its recursive subdirectories
+
+    JZ 2021
+
+    Args:
+        base_dir: str
+            The base directory in which to start the search
+        query : str
+            The file name to look for in the subdirectories of base_dir
+    Returns:
+        A list of strings of full path directories to files named like the given file in question
+    '''
+    sub_base_dir = base_dir + r'/' if base_dir[-2:] != '/' else base_dir
+
+    traversal_list = []
+    traversal_list.append(str(sub_base_dir))
+
+    seen_values = []
+
+    counter = 1
+
+    while True:
+        if len(traversal_list) == 0:
+            break
+        print(f'Currently Exploring Directory # {counter}')
+        directory = traversal_list.pop(0)
+        if query in directory:
+            seen_values.append(directory)
+        else:
+            traversal_list.extend(glob.glob(str(directory + r'/*')))
+
+        counter += 1
+
+    return seen_values
+
+result = query_directory()
+
+paths_all = {}
+for path in result:
+    paths_all[path] = np.load(path, allow_pickle=True)
+    
+path_save = r'\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Rich\data\res2p\scanimage data\all_stat_files_20211022.pkl'
+with open(path_save, 'wb') as file:
+    pickle.dump(paths_all, file)
 
 
 ###############################################################################
