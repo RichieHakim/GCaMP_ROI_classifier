@@ -53,16 +53,16 @@ class AddPoissonNoise(Module):
         Args:
             lam (float): 
                 The lambda parameter of the Poisson noise.
-            level_bounds (tuple):
-                The lower and upper bound of how much 
-                 noise to add.
+            scaler_bounds (tuple):
+                The bounds of how much to multiply the image by
+                 prior to adding the Poisson noise.
             prob (float):
                 The probability of adding noise at all.
-            scaler (float):
-                How much to scale the input by when passing
-                 torch.poisson; then undo the rescale in 
-                 the output.
-                Smaller values result in noisier outputs.\
+            base (float):
+                The base of the logarithm used if scaling
+                 is set to 'log'. Larger base means more
+                 noise (higher probability of scaler being
+                 close to scaler_bounds[0]).
             scaling (str):
                 'linear' or 'log'
         """
@@ -87,3 +87,79 @@ class AddPoissonNoise(Module):
     
     def __repr__(self):
         return f"AddPoissonNoise(level_bounds={self.level_bounds}, prob={self.prob})"
+
+class ScaleDynamicRange(Module):
+    """
+    Scales the dynamic range of the input tensor.
+    RH 2021
+    """
+    def __init__(self, scaler_bounds=(0,1)):
+        """
+        Initializes the class.
+
+        Args:
+            scaler_bounds (tuple):
+                The bounds of how much to multiply the image by
+                 prior to adding the Poisson noise.
+        """
+        super().__init__()
+
+        self.bounds = scaler_bounds
+        self.range = scaler_bounds[1] - scaler_bounds[0]
+    
+    def forward(self, tensor):
+        tensor_minSub = tensor - tensor.min()
+        return tensor_minSub * (self.range / tensor_minSub.max())
+    def __repr__(self):
+        return f"ScaleDynamicRange(scaler_bounds={self.scaler_bounds})"
+
+class TileChannels(Module):
+    """
+    Expand dimension dim in X_in and tile to be N channels.
+    RH 2021
+    """
+    def __init__(self, dim=0, n_channels=3):
+        """
+        Initializes the class.
+
+        Args:
+            dim (int):
+                The dimension to tile.
+            n_channels (int):
+                The number of channels to tile to.
+        """
+        super().__init__()
+        self.dim = dim
+        self.n_channels = n_channels
+
+    def forward(self, tensor):
+        dims = [1]*len(tensor.shape)
+        dims[self.dim] = self.n_channels
+        return torch.tile(tensor, dims)
+    def __repr__(self):
+        return f"TileChannels(dim={self.dim})"
+
+class Normalize(Module):
+    """
+    Normalizes the input tensor by setting the 
+     mean and standard deviation of each channel.
+    RH 2021
+    """
+    def __init__(self, means=0, stds=1):
+        """
+        Initializes the class.
+
+        Args:
+            mean (float):
+                Mean to set.
+            std (float):
+                Standard deviation to set.
+        """
+        super().__init__()
+        self.means = torch.as_tensor(means)[:,None,None]
+        self.stds = torch.as_tensor(stds)[:,None,None]
+    def forward(self, tensor):
+        tensor_means = tensor.mean(dim=(1,2), keepdim=True)
+        tensor_stds = tensor.std(dim=(1,2), keepdim=True)
+        tensor_z = (tensor - tensor_means) / tensor_stds
+        return (tensor_z * self.stds) + self.means

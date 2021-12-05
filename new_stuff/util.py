@@ -398,7 +398,8 @@ class dataset_simCLR(Dataset):
         if self.transform is not None:
             for ii in range(self.n_transforms):
 
-                X_sample_transformed.append(tile_channels(self.transform(self.X[idx_sample]), dim=0))
+                # X_sample_transformed.append(tile_channels(self.transform(self.X[idx_sample]), dim=0))
+                X_sample_transformed.append(self.transform(self.X[idx_sample]))
         else:
             X_sample_transformed = tile_channels(self.X[idx_sample], dim=0)
         
