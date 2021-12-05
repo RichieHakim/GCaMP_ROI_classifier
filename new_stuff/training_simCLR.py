@@ -40,6 +40,8 @@ def train_step_simCLR( X_train_batch, y_train_batch,
     Returns:
         loss (float):
             Loss of the current batch
+        pos_over_neg (float):
+            Ratio of logits of positive to negative samples
     """
 
     double_sample_weights = torch.tile(sample_weights.reshape(-1), (2,))
@@ -56,6 +58,7 @@ def train_step_simCLR( X_train_batch, y_train_batch,
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
+    pos_over_neg = (torch.mean(logits[:,0]) / torch.mean(logits[:,1:])).item()
     # loss_unreduced_train = criterion(logits, labels)
 
     # print('contrastive_matrix_sample_weights', contrastive_matrix_sample_weights)
@@ -75,7 +78,7 @@ def train_step_simCLR( X_train_batch, y_train_batch,
     optimizer.step()
     scheduler.step()
 
-    return loss_train.item()
+    return loss_train.item(), pos_over_neg
 
 def L2_reg(model):
     penalized_params = util.get_trainable_parameters(model)
@@ -166,8 +169,8 @@ def epoch_step( dataloader,
             List of losses (passed through and appended)
     """
 
-    def print_info(batch, n_batches, loss_train, loss_val, learning_rate, precis=5):
-        print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, lr: {learning_rate:.{precis}}')
+    def print_info(batch, n_batches, loss_train, loss_val, pos_over_neg, learning_rate, precis=5):
+        print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, pos_over_neg: {pos_over_neg} lr: {learning_rate:.{precis}}')
 
     for i_batch, (X_batch, y_batch, idx_batch, sample_weights) in enumerate(dataloader):
         # for param in util.get_trainable_parameters(model):
@@ -178,7 +181,7 @@ def epoch_step( dataloader,
         y_batch = y_batch.to(device)
         # Get batch weights
         if mode == 'semi-supervised':
-            loss = train_step_simCLR(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
+            loss, pos_over_neg = train_step_simCLR(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
         elif mode == 'supervised':
             loss = train_step_classifier(X_batch, y_batch, model, optimizer, criterion, scheduler, L2_alpha=L2_alpha)
         loss_rolling_train.append(loss)
@@ -196,6 +199,7 @@ def epoch_step( dataloader,
                             n_batches=len( dataloader),
                             loss_train=loss_rolling_train[-1],
                             loss_val=loss_rolling_val[-1],
+                            pos_over_neg=pos_over_neg,
                             learning_rate=scheduler.get_last_lr()[0],
                             precis=5)
         # if verbose>0:
