@@ -114,10 +114,10 @@ def epoch_step( dataloader,
                 L2_alpha=0.0, # TODO: implement for simCLR
                 mode='semi-supervised',
                 loss_rolling_train=[], 
+                loss_rolling_val=[],
                 device='cpu', 
                 do_validation=False,
                 validation_Object=None,
-                loss_rolling_val=[],
                 verbose=False,
                 verbose_update_period=100,
                
@@ -406,6 +406,3 @@ def richs_contrastive_matrix(features, batch_size, n_views=2, temperature=0.5, D
 
     logits = logits / temperature
     return logits, labels
-
-def print_hi():
-    print('hi')
