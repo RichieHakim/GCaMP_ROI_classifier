@@ -54,7 +54,7 @@ def train_step_simCLR( X_train_batch, y_train_batch,
 
     optimizer.zero_grad()
 
-    features = model.forward_latent(X_train_batch)
+    features = model.forward(X_train_batch)
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
@@ -179,6 +179,7 @@ def epoch_step( dataloader,
         X_batch = torch.cat(X_batch, dim=0)
         X_batch = X_batch.to(device)
         y_batch = y_batch.to(device)
+        
         # Get batch weights
         if mode == 'semi-supervised':
             loss, pos_over_neg = train_step_simCLR(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
