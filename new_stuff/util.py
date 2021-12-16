@@ -282,7 +282,8 @@ class dataset_simCLR(Dataset):
                     DEVICE='cpu',
                     dtype_X=torch.float32,
                     dtype_y=torch.int64,
-                    temp_uncertainty=1
+                    temp_uncertainty=1,
+                    expand_dim=True
                     ):
 
         """
@@ -333,7 +334,10 @@ class dataset_simCLR(Dataset):
                 torch.utils.data.Dataset object.
         """
 
-        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE)[:,None,...] # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.expand_dim = expand_dim
+        
+        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.X = self.X[:,None,...] if expand_dim else self.X
         self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
         
         self.idx = torch.arange(self.X.shape[0], device=DEVICE)
@@ -348,6 +352,8 @@ class dataset_simCLR(Dataset):
 
         self.net_model = None
         self.classification_model = None
+        
+        
         # self.class_weights = torch.as_tensor(class_weights, dtype=torch.float32, device=DEVICE)
 
         # self.classModelParams_coef_ = mp.Array(np.ctypeslib.as_array(mp.Array(ctypes.c_float, feature)))
@@ -387,7 +393,10 @@ class dataset_simCLR(Dataset):
         if self.classification_model is not None:
             # features = self.net_model(tile_channels(self.X[idx][:,None,...], dim=1))
             # proba = self.classification_model.predict_proba(features.cpu().detach())[0]
-            proba = self.classification_model.predict_proba(tile_channels(self.X[idx_sample][:,None,...], dim=1))[0]
+            
+            tmp_X = self.X[idx_sample][:,None,...] if self.expand_dim else self.X[idx_sample]
+            
+            proba = self.classification_model.predict_proba(tile_channels(tmp_X, dim=1))[0]
             
             # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=self.temp_uncertainty)
             sample_weight = 1
