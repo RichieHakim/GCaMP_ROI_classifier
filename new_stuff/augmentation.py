@@ -118,7 +118,7 @@ class TileChannels(Module):
     Expand dimension dim in X_in and tile to be N channels.
     RH 2021
     """
-    def __init__(self, dim=0, n_channels=3):
+    def __init__(self, dim=-3, n_channels=3):
         """
         Initializes the class.
 
