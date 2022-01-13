@@ -393,7 +393,14 @@ class dataset_simCLR(Dataset):
         if self.classification_model is not None:
             # features = self.net_model(tile_channels(self.X[idx][:,None,...], dim=1))
             # proba = self.classification_model.predict_proba(features.cpu().detach())[0]
+<<<<<<< HEAD
             proba = self.classification_model.predict_proba(tile_channels(self.X[idx_sample][:,None,...], dim=-3))[0]
+=======
+            
+            tmp_X = self.X[idx_sample][:,None,...] if self.expand_dim else self.X[idx_sample]
+            
+            proba = self.classification_model.predict_proba(tile_channels(tmp_X, dim=1))[0]
+>>>>>>> 67a3b47212d043eca6e1320b9a12ef1e92370d4a
             
             # sample_weight = loss_uncertainty(torch.as_tensor(proba, dtype=torch.float32), temperature=self.temp_uncertainty)
             sample_weight = 1
