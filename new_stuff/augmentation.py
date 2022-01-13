@@ -1,5 +1,6 @@
 import torch
 from torch.nn import Module
+import time
 
 class AddGaussianNoise(Module):
     """
@@ -9,7 +10,6 @@ class AddGaussianNoise(Module):
     def __init__(self, mean=0., std=1., level_bounds=(0., 1.), prob=1):
         """
         Initializes the class.
-
         Args:
             mean (float): 
                 The mean of the Gaussian noise.
@@ -49,7 +49,6 @@ class AddPoissonNoise(Module):
     def __init__(self, scaler_bounds=(0.1,1), prob=1, base=10, scaling='log'):
         """
         Initializes the class.
-
         Args:
             lam (float): 
                 The lambda parameter of the Poisson noise.
@@ -96,7 +95,6 @@ class ScaleDynamicRange(Module):
     def __init__(self, scaler_bounds=(0,1)):
         """
         Initializes the class.
-
         Args:
             scaler_bounds (tuple):
                 The bounds of how much to multiply the image by
@@ -121,7 +119,6 @@ class TileChannels(Module):
     def __init__(self, dim=0, n_channels=3):
         """
         Initializes the class.
-
         Args:
             dim (int):
                 The dimension to tile.
@@ -148,7 +145,6 @@ class Normalize(Module):
     def __init__(self, means=0, stds=1):
         """
         Initializes the class.
-
         Args:
             mean (float):
                 Mean to set.
@@ -163,3 +159,102 @@ class Normalize(Module):
         tensor_stds = tensor.std(dim=(1,2), keepdim=True)
         tensor_z = (tensor - tensor_means) / tensor_stds
         return (tensor_z * self.stds) + self.means
+
+class WarpPoints(Module):
+    """
+    Warps the input tensor at the given points by the given deltas.
+    RH 2021 / JZ 2021
+    """
+    
+    def __init__(self,  r=[0, 2],
+                        cx=[-0.5, 0.5],
+                        cy=[-0.5, 0.5], 
+                        dx=[-0.3, 0.3], 
+                        dy=[-0.3, 0.3], 
+                        n_warps=1,
+                        prob=0.5,
+                        img_size_in=[36, 36],
+                        img_size_out=[36, 36]):
+        """
+        Initializes the class.
+
+        Args:
+            r (list):
+                The range of the radius.
+            cx (list):
+                The range of the center x.
+            cy (list):  
+                The range of the center y.
+            dx (list):
+                The range of the delta x.
+            dy (list):
+                The range of the delta y.
+            n_warps (int):
+                The number of warps to apply.
+            prob (float):
+                The probability of adding noise at all.
+            img_size_in (list):
+                The size of the input image.
+            img_size_out (list):
+                The size of the output image.
+        """
+        tik = time.time()
+        
+        super().__init__()
+
+        self.r = r
+        self.cx = cx
+        self.cy = cy
+        self.dx = dx
+        self.dy = dy
+        self.n_warps = n_warps
+
+        self.prob = prob
+
+        self.img_size_in = img_size_in
+        self.img_size_out = img_size_out
+
+        self.r_range = r[1] - r[0]
+        self.cx_range = cx[1] - cx[0]
+        self.cy_range = cy[1] - cy[0]
+        self.dx_range = dx[1] - dx[0]
+        self.dy_range = dy[1] - dy[0]
+
+        self.meshgrid_in =  torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_in[0]),  torch.linspace(-1, 1, self.img_size_in[1])), dim=0)[...,None], (1,1,1, n_warps))
+        self.meshgrid_out = torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_out[0]), torch.linspace(-1, 1, self.img_size_out[1])), dim=0)[...,None], (1,1,1, n_warps))
+        
+        tok = time.time()
+        print('Warp Initialization took:', tok-tik, 's')
+
+    def gaus2D(self, x, y, sigma):
+        return torch.exp(-((torch.square(self.meshgrid_out[0] - x[None,None,:]) + torch.square(self.meshgrid_out[1] - y[None,None,:]))/(2*torch.square(sigma[None,None,:]))))        
+
+    def forward(self, tensor):
+        tensor = tensor[None, ...]
+        
+        if torch.rand(1) <= self.prob:
+            rands = torch.rand(5, self.n_warps)
+            cx = rands[0,:] * (self.cx_range) + self.cx[0]
+            cy = rands[1,:] * (self.cy_range) + self.cy[0]
+            dx = rands[2,:] * (self.dx_range) + self.dx[0]
+            dy = rands[3,:] * (self.dy_range) + self.dy[0]
+            r =  rands[4,:] * (self.r_range)  + self.r[0]
+            im_gaus = self.gaus2D(x=cx, y=cy, sigma=r) # shape: (img_size_x, img_size_y, n_warps)
+            im_disp = im_gaus[None,...] * torch.stack([dx, dy], dim=0).reshape(2, 1, 1, self.n_warps) # shape: (2(dx,dy), img_size_x, img_size_y, n_warps)
+            im_disp_composite = torch.sum(im_disp, dim=3, keepdim=True) # shape: (2(dx,dy), img_size_x, img_size_y)
+            im_newPos = self.meshgrid_out[...,0:1] + im_disp_composite
+        else:
+            im_newPos = self.meshgrid_out[...,0:1]
+        
+        im_newPos = torch.permute(im_newPos, [3,2,1,0]) # Requires 1/2 transpose because otherwise results are transposed from torchvision Resize
+        ret = torch.nn.functional.grid_sample( tensor, 
+                                                im_newPos, 
+                                                mode='bilinear',
+                                                # mode='bicubic', 
+                                                padding_mode='zeros', 
+                                                align_corners=True)
+        ret = ret[0]
+        return ret
+        
+    def __repr__(self):
+        return f"WarpPoints(r={self.r}, cx={self.cx}, cy={self.cy}, dx={self.dx}, dy={self.dy}, n_warps={self.n_warps}, prob={self.prob}, img_size_in={self.img_size_in}, img_size_out={self.img_size_out})"
