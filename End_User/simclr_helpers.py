@@ -5,12 +5,6 @@ import numpy as np
 import importlib
 from tqdm.notebook import tqdm
 import pickle
-
-base_dir = '/Users/josh/Documents/'
-# Data Loading Function
-sys.path.append(f'{base_dir}/github_repos')
-dir_folders = f'{base_dir}/label_data'
-
 from basic_neural_processing_modules import h5_handling, pickle_helpers
 
 def load_h5(path, h5_keys):
@@ -21,11 +15,6 @@ def load_h5(path, h5_keys):
 def drop_nan_imgs(rois):
     ROIs_without_NaNs = torch.where(~torch.any(torch.any(torch.isnan(rois), dim=1), dim=1))[0]
     return rois[ROIs_without_NaNs]
-
-base_dir = '/Users/josh/Documents/'
-# Data Loading Function
-sys.path.append(f'{base_dir}/github_repos')
-dir_folders = f'{base_dir}/label_data'
 
 
 ## TODO: Troubleshoot the runtime on this
