@@ -147,7 +147,7 @@ def get_model(path_to_model):
     model.load_state_dict(torch.load(f'{path_to_model}', map_location='cpu'))
     return model
 
-def get_dataset_dataloader(data, dl_kwargs={}):
+def get_dataset_dataloader(data, batch_size=128, device='cpu', dl_kwargs={}):
     # Use dl_kwargs for...
     # pin_memory=True,
     # num_workers=32,
@@ -156,12 +156,12 @@ def get_dataset_dataloader(data, dl_kwargs={}):
 
     transforms = get_transforms()
     dataset = util.dataset_simCLR(
-                                    torch.as_tensor(data, device='cpu', dtype=torch.float32),
-                                    torch.as_tensor(torch.zeros(data.shape[0]), device='cpu', dtype=torch.float32),
+                                    torch.as_tensor(data, device=device, dtype=torch.float32),
+                                    torch.as_tensor(torch.zeros(data.shape[0]), device=device, dtype=torch.float32),
                                     n_transforms=1,
                                     class_weights=np.array([1]),
                                     transform=transforms,
-                                    DEVICE='cpu',
+                                    DEVICE=device,
                                     dtype_X=torch.float32,
                                     dtype_y=torch.int64,
                                     temp_uncertainty=16
@@ -171,7 +171,7 @@ def get_dataset_dataloader(data, dl_kwargs={}):
 
     dataloader = torch.utils.data.DataLoader( dataset,
                                             #   batch_size=1024,
-                                              batch_size=128,
+                                              batch_size=batch_size,
                                               shuffle=False,
                                               drop_last=False,
                                               **dl_kwargs
