@@ -172,6 +172,37 @@ def import_multiple_label_files(paths_labelFiles=None, dir_labelFiles=None, file
             plt.title('labels ' + str(ii))
     return labels_all_list
 
+
+def convert_stat_to_sparse_spatial_footprints(path_stat=None, stat=None, path_ops=None, frame_height_width=None, normalize='sum'):
+    import scipy.sparse
+    import sparse
+    import pathlib
+    from tqdm.notebook import trange
+
+    if stat is None:
+        stat = np.load(pathlib.Path(path_stat).resolve(), allow_pickle=True)
+    if frame_height_width is None:
+        ops = np.load(pathlib.Path(path_ops).resolve(), allow_pickle=True)[()]
+        frame_height_width = (ops['Ly'], ops['Lx'])
+
+    sf = sparse.zeros(tuple([0] + list(frame_height_width)), dtype=np.float32)
+
+    for i_roi in trange(len(stat)):
+        sf_tmp = scipy.sparse.lil_matrix(frame_height_width, dtype=np.float32)
+        sf_tmp[stat[i_roi]['ypix'][:], stat[i_roi]['xpix'][:]] = stat[i_roi]['lam']
+        
+        if normalize == 'sum':
+            sf_tmp = sf_tmp / np.sum(sf_tmp)
+        if normalize == 'max':
+            sf_tmp = sf_tmp / np.max(sf_tmp.tocsr().max())
+        if normalize == 'mean':
+            sf_tmp = sf_tmp / np.mean(sf_tmp)
+
+        sf = sparse.concatenate((sf, sparse.COO(sf_tmp)[None,...]), axis=0)
+    
+    return sf
+
+
 ###############################################################################
 ############################### Directory functions ###########################
 ###############################################################################
