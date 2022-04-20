@@ -22,7 +22,7 @@ import torchvision.datasets as datasets
 import GCaMP_ROI_classifier.vicreg.augmentations as aug
 from GCaMP_ROI_classifier.vicreg.distributed import init_distributed_mode
 
-import GCaMP_ROI_classifier.vicreg.resnet
+import GCaMP_ROI_classifier.vicreg.resnet as resnet
 
 
 def get_arguments():
@@ -197,8 +197,8 @@ class VICReg(nn.Module):
 
         repr_loss = F.mse_loss(x, y)
 
-        x = torch.cat(FullGatherLayer.apply(x), dim=0)
-        y = torch.cat(FullGatherLayer.apply(y), dim=0)
+        # x = torch.cat(FullGatherLayer.apply(x), dim=0)
+        # y = torch.cat(FullGatherLayer.apply(y), dim=0)
         x = x - x.mean(dim=0)
         y = y - y.mean(dim=0)
 
@@ -312,9 +312,11 @@ class FullGatherLayer(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, x):
-        output = [torch.zeros_like(x) for _ in range(dist.get_world_size())]
-        dist.all_gather(output, x)
-        return tuple(output)
+        # output = [torch.zeros_like(x) for _ in range(dist.get_world_size())]
+        # output = [torch.zeros_like(x) for _ in range(1)]
+        # dist.all_gather(output, x)
+        # return tuple(output)
+        return tuple([torch.zeros_like(x)])
 
     @staticmethod
     def backward(ctx, *grads):
