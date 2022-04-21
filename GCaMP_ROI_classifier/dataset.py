@@ -7,6 +7,164 @@ from torch.utils.data import DataLoader
 ############################### MAKE DATALOADER ###############################
 ###############################################################################
 
+class dataset_vicreg(Dataset):
+    """    
+    demo:
+    
+    transforms = torch.nn.Sequential(
+    torchvision.transforms.RandomHorizontalFlip(p=0.5),
+    
+    torchvision.transforms.GaussianBlur(5,
+                                        sigma=(0.01, 1.)),
+    
+    torchvision.transforms.RandomPerspective(distortion_scale=0.6, 
+                                             p=1, 
+                                             interpolation=torchvision.transforms.InterpolationMode.BILINEAR, 
+                                             fill=0),
+    torchvision.transforms.RandomAffine(
+                                        degrees=(-180,180),
+                                        translate=(0.4, 0.4),
+                                        scale=(0.7, 1.7), 
+                                        shear=(-20, 20, -20, 20), 
+                                        interpolation=torchvision.transforms.InterpolationMode.BILINEAR, 
+                                        fill=0, 
+                                        fillcolor=None, 
+                                        resample=None),
+    )
+    scripted_transforms = torch.jit.script(transforms)
+
+    dataset = util.dataset_simCLR(  torch.tensor(images), 
+                                labels, 
+                                n_transforms=2, 
+                                transform=scripted_transforms,
+                                DEVICE='cpu',
+                                dtype_X=torch.float32,
+                                dtype_y=torch.int64 )
+    
+    dataloader = torch.utils.data.DataLoader(   dataset,
+                                            batch_size=64,
+        #                                     sampler=sampler,
+                                            shuffle=True,
+                                            drop_last=True,
+                                            pin_memory=False,
+                                            num_workers=0,
+                                            )
+    """
+    def __init__(   self, 
+                    X, 
+                    y, 
+                    transforms=None,
+                    DEVICE='cpu',
+                    dtype_X=torch.float32,
+                    dtype_y=torch.int64,
+                    expand_dim=True
+                    ):
+
+        """
+        Make a dataset from a list / numpy array / torch tensor
+        of images and labels.
+        RH 2021 / JZ 2021
+
+        Args:
+            X (torch.Tensor / np.array / list of float32):
+                Images.
+                Shape: (n_samples, height, width)
+                Currently expects no channel dimension. If/when
+                 it exists, then shape should be
+                (n_samples, n_channels, height, width)
+            y (torch.Tensor / np.array / list of ints):
+                Labels.
+                Shape: (n_samples)
+            n_transforms (int):
+                Number of transformations to apply to each image.
+                Should be >= 1.
+            transform (callable, optional):
+                Optional transform to be applied on a sample.
+                See torchvision.transforms for more information.
+                Can use torch.nn.Sequential( a bunch of transforms )
+                 or other methods from torchvision.transforms. Try
+                 to use torch.jit.script(transform) if possible.
+                If not None:
+                 Transform(s) are applied to each image and the 
+                 output shape of X_sample_transformed for 
+                 __getitem__ will be
+                 (n_samples, n_transforms, n_channels, height, width)
+                If None:
+                 No transform is applied and output shape
+                 of X_sample_trasformed for __getitem__ will be 
+                 (n_samples, n_channels, height, width)
+                 (which is missing the n_transforms dimension).
+            DEVICE (str):
+                Device on which the data will be stored and
+                 transformed. Best to leave this as 'cpu' and do
+                 .to(DEVICE) on the data for the training loop.
+            dtype_X (torch.dtype):
+                Data type of X.
+            dtype_y (torch.dtype):
+                Data type of y.
+        
+        Returns:
+            torch.utils.data.Dataset:
+                torch.utils.data.Dataset object.
+        """
+
+        self.X = torch.as_tensor(X, dtype=dtype_X, device=DEVICE) # first dim will be subsampled from. Shape: (n_samples, n_channels, height, width)
+        self.X = self.X[:,None,...] if expand_dim else self.X
+        self.y = torch.as_tensor(y, dtype=dtype_y, device=DEVICE) # first dim will be subsampled from.
+        
+        self.idx = torch.arange(self.X.shape[0], device=DEVICE)
+        self.n_samples = self.X.shape[0]
+
+        self.transforms = transforms
+        self.headmodel = None
+
+        self.net_model = None
+        self.classification_model = None
+        
+        if X.shape[0] != y.shape[0]:
+            raise ValueError('RH Error: X and y must have same first dimension shape')
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, idx):
+        """
+        Retrieves and transforms a sample.
+        RH 2021 / JZ 2021
+
+        Args:
+            idx (int):
+                Index / indices of the sample to retrieve.
+            
+        Returns:
+            X_sample_transformed (torch.Tensor):
+                Transformed sample(s).
+                Shape: 
+                    If transform is None:
+                        X_sample_transformed[batch_size, n_channels, height, width]
+                    If transform is not None:
+                        X_sample_transformed[n_transforms][batch_size, n_channels, height, width]
+            y_sample (int):
+                Label(s) of the sample(s).
+            idx_sample (int):
+                Index of the sample(s).
+        """
+
+        # y_sample = self.y[idx]
+        idx_sample = self.idx[idx]
+        # sample_weight = 1
+
+        t = self.transforms[0](self.X[idx_sample])
+        # t = tile_channels(t, dim=-3)
+        t_prime = self.transforms[1](self.X[idx_sample])
+        # t_prime = tile_channels(t_prime, dim=-3)
+
+        # print(t.size(), t_prime.size())
+
+        # return X_transformed, y_sample, idx_sample, sample_weight
+        return t, t_prime, idx_sample
+
+
 
 class dataset_simCLR(Dataset):
     """    
