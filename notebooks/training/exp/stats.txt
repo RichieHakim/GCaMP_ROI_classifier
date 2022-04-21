@@ -1,0 +1,5 @@
+/home/joz608/.conda/envs/grc/lib/python3.8/site-packages/ipykernel_launcher.py -f /home/joz608/.local/share/jupyter/runtime/kernel-673a02be-597c-4b90-a763-9887d557804f.json
+/home/joz608/.conda/envs/grc/lib/python3.8/site-packages/ipykernel_launcher.py -f /home/joz608/.local/share/jupyter/runtime/kernel-673a02be-597c-4b90-a763-9887d557804f.json
+/home/joz608/.conda/envs/grc/lib/python3.8/site-packages/ipykernel_launcher.py -f /home/joz608/.local/share/jupyter/runtime/kernel-673a02be-597c-4b90-a763-9887d557804f.json
+{"epoch": 0, "step": 226, "loss": 55.05907440185547, "time": 60, "lr": 2.4804723170508983e-06}
+/home/joz608/.conda/envs/grc/lib/python3.8/site-packages/ipykernel_launcher.py -f /home/joz608/.local/share/jupyter/runtime/kernel-673a02be-597c-4b90-a763-9887d557804f.json

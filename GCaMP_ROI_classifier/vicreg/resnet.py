@@ -297,6 +297,25 @@ class ResNet(nn.Module):
         return x
 
 
+def resnet18(**kwargs):
+    import torchvision.models as models
+    resnet18 = models.resnet18(pretrained=True)
+    
+    if 'frozen' not in kwargs or kwargs['frozen']:
+        for name, param in list(resnet18.named_parameters()):
+            print(name)
+            if name[:len('layer')] == 'layer':
+                if int(name[len('layer')]) < 4:
+                    param.requires_grad = False
+                elif int(name[len('layer')]) >= 4:
+                    param.requires_grad = True
+
+#         for name, param in list(resnet18.named_parameters()):
+#             if param.requires_grad:
+#                 print(name)
+    
+    return resnet18, 1000
+
 def resnet34(**kwargs):
     return ResNet(BasicBlock, [3, 4, 6, 3], **kwargs), 512
 
