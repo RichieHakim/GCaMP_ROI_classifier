@@ -219,7 +219,9 @@ class WarpPoints(Module):
         self.cy_range = cy[1] - cy[0]
         self.dx_range = dx[1] - dx[0]
         self.dy_range = dy[1] - dy[0]
-
+        
+        #### , indexing='ij' within torch.meshgrid call to remove warning
+        
         self.meshgrid_in =  torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_in[0]),  torch.linspace(-1, 1, self.img_size_in[1])), dim=0)[...,None], (1,1,1, n_warps))
         self.meshgrid_out = torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_out[0]), torch.linspace(-1, 1, self.img_size_out[1])), dim=0)[...,None], (1,1,1, n_warps))
         
@@ -258,3 +260,92 @@ class WarpPoints(Module):
         
     def __repr__(self):
         return f"WarpPoints(r={self.r}, cx={self.cx}, cy={self.cy}, dx={self.dx}, dy={self.dy}, n_warps={self.n_warps}, prob={self.prob}, img_size_in={self.img_size_in}, img_size_out={self.img_size_out})"
+    
+    
+
+class Horizontal_stripe_scale(Module):
+    """
+    Adds horizontal stripes. Can be used for for augmentation
+     in images generated from raster scanning with bidirectional
+     phased raster scanning.
+    RH 2022
+    """
+    def __init__(self, alpha_min_max=(0.5,1), im_size=(36,36)):
+        """
+        Initializes the class.
+        Args:
+            alpha_min_max (2-tuple of floats):
+                Range of scaling to apply to stripes.
+                Will be pulled from uniform distribution.
+        """
+        super().__init__()
+        
+        self.alpha_min = alpha_min_max[0]
+        self.alpha_max = alpha_min_max[1]
+        self.alpha_range = alpha_min_max[1] - alpha_min_max[0]
+        
+        self.stripes_odd   = (torch.arange(im_size[0]) % 2)
+        self.stripes_even = ((torch.arange(im_size[0])+1) % 2)
+
+    def forward(self, tensor):
+#         assert tensor.ndim==3, "RH ERROR: Number of dimensions of input tensor should be 3: (n_images, height, width)"
+
+        n_ims = tensor.shape[0]
+        alphas_odd  = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
+        alphas_even = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
+        
+        stripes_mask = (self.stripes_odd[None,:]*alphas_odd[:,None]) + (self.stripes_even[None,:]*alphas_even[:,None])
+        mask = torch.ones(tensor.shape[1], tensor.shape[2]) * stripes_mask[:,:,None]
+        
+        return mask*tensor
+
+class Horizontal_stripe_shift(Module):
+    """
+    Shifts horizontal stripes. Can be used for for augmentation
+     in images generated from raster scanning with bidirectional
+     phased raster scanning.
+    RH 2022
+    """
+    def __init__(self, alpha_min_max=(0,5), im_size=(36,36)):
+        """
+        Initializes the class.
+        Args:
+            alpha_min_max (2-tuple of ints):
+                Range of absolute shift differences between
+                 adjacent horizontal lines.
+                In pixels.
+                Will be pulled from uniform distribution.
+        """
+        super().__init__()
+        
+        self.alpha_min = alpha_min_max[0]
+        self.alpha_max = alpha_min_max[1]
+        self.alpha_range = alpha_min_max[1] - alpha_min_max[0]
+        
+        self.idx_odd   = (torch.arange(im_size[0]) % 2).type(torch.bool)
+        self.idx_even = ((torch.arange(im_size[0])+1) % 2).type(torch.bool)
+    def forward(self, tensor):
+#         assert tensor.ndim==3, "RH ERROR: Number of dimensions of input tensor should be 3: (n_images, height, width)"
+
+        n_ims = tensor.shape[0]
+        shape_im = (tensor.shape[1], tensor.shape[2])
+        
+        alpha = torch.randint(low=self.alpha_min, high=self.alpha_max, size=[n_ims]) * (torch.randint(low=0, high=2, size=[n_ims])*2 - 1)
+        alpha_half = alpha/2
+        alphas_odd  =  torch.ceil(alpha_half).type(torch.int64)
+        alphas_even = -torch.floor(alpha_half).type(torch.int64)
+        
+        out = torch.zeros_like(tensor)
+        for ii in range(out.shape[0]):
+            idx_take = slice(max(0, -alphas_odd[ii]) , min(shape_im[1], shape_im[1]-alphas_odd[ii]))
+            idx_put = slice(max(0, alphas_odd[ii]) , min(shape_im[1], shape_im[1]+alphas_odd[ii]))
+            out[ii, self.idx_odd, idx_put] = tensor[ii, self.idx_odd, idx_take]
+            
+            idx_take = slice(max(0, -alphas_even[ii]) , min(shape_im[1], shape_im[1]-alphas_even[ii]))
+            idx_put = slice(max(0, alphas_even[ii]) , min(shape_im[1], shape_im[1]+alphas_even[ii]))
+            out[ii, self.idx_even, idx_put] = tensor[ii, self.idx_even, idx_take]
+        
+        return out
+
+
+

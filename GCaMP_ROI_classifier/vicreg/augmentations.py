@@ -24,12 +24,14 @@ class GaussianBlur(object):
 
 
 class Solarization(object):
-    def __init__(self, p):
+    def __init__(self, p, thresh_bounds=(130, 131)):
         self.p = p
+        self.thresh_bounds = thresh_bounds
 
     def __call__(self, img):
         if np.random.rand() < self.p:
-            return ImageOps.solarize(img)
+            thresh = np.random.randint(*self.thresh_bounds)
+            return ImageOps.solarize(img, thresh=thresh)
         else:
             return img
 
