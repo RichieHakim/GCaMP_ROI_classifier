@@ -43,6 +43,9 @@ def get_arguments():
                         help='Architecture of the backbone encoder network')
     parser.add_argument("--mlp", default="8192-8192-8192",
                         help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--out-features", default="512",
+                        help='Size and number of latent dimension features')
+    
 
     # Optim
     parser.add_argument("--epochs", type=int, default=100,

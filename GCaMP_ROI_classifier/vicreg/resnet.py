@@ -299,7 +299,18 @@ class ResNet(nn.Module):
 
 def resnet18(**kwargs):
     import torchvision.models as models
+    
+    base_out_features = 512
     resnet18 = models.resnet18(pretrained=True)
+    
+    if 'out-features' in kwargs:
+        out_features = kwargs['out-features']
+        lin_to_out_features = torch.nn.Linear(in_features=base_out_features, out_features=out_features)
+        resnet18 = torch.nn.Sequential(*(list(resnet18.children())[:-1] + [torch.nn.Flatten(), lin_to_out_features]))
+    else:
+        out_features = base_out_features
+        resnet18 = torch.nn.Sequential(*(list(resnet18.children())[:-1] + [torch.nn.Flatten()]))
+        
     
     if 'frozen' not in kwargs or kwargs['frozen']:
         for name, param in list(resnet18.named_parameters()):
@@ -314,7 +325,7 @@ def resnet18(**kwargs):
 #             if param.requires_grad:
 #                 print(name)
     
-    return resnet18, 1000
+    return resnet18, out_features
 
 def resnet34(**kwargs):
     return ResNet(BasicBlock, [3, 4, 6, 3], **kwargs), 512
