@@ -222,8 +222,8 @@ class WarpPoints(Module):
         
         #### , indexing='ij' within torch.meshgrid call to remove warning
         
-        self.meshgrid_in =  torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_in[0]),  torch.linspace(-1, 1, self.img_size_in[1])), dim=0)[...,None], (1,1,1, n_warps))
-        self.meshgrid_out = torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_out[0]), torch.linspace(-1, 1, self.img_size_out[1])), dim=0)[...,None], (1,1,1, n_warps))
+        self.meshgrid_in =  torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_in[0]),  torch.linspace(-1, 1, self.img_size_in[1]), indexing='ij'), dim=0)[...,None], (1,1,1, n_warps))
+        self.meshgrid_out = torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_out[0]), torch.linspace(-1, 1, self.img_size_out[1]), indexing='ij'), dim=0)[...,None], (1,1,1, n_warps))
         
         tok = time.time()
         print('Warp Initialization took:', tok-tik, 's')
