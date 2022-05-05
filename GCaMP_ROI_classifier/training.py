@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import gc
 
 import torch
 import torch.cuda
@@ -55,6 +56,7 @@ def train_step_simCLR( X_train_batch, y_train_batch,
     optimizer.zero_grad()
 
     features = model.forward(X_train_batch)
+    torch.cuda.empty_cache()
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
     logits, labels = richs_contrastive_matrix(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
@@ -213,6 +215,15 @@ def epoch_step( dataloader,
         #                     loss_val=loss_rolling_val[-1],
         #                     learning_rate=scheduler.get_last_lr()[0],
         #                     precis=5)
+        
+#         del X_batch, y_batch
+#         gc.collect()
+#         torch.cuda.empty_cache()
+#         gc.collect()
+#         torch.cuda.empty_cache()
+#         gc.collect()
+#         torch.cuda.empty_cache()
+        
     return loss_rolling_train
 
 class validation_Obj():

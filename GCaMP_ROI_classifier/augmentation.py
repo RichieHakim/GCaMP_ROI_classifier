@@ -74,6 +74,9 @@ class AddPoissonNoise(Module):
         self.scaling = scaling
 
     def forward(self, tensor):
+        check = tensor.min()
+        if check < 0:
+            print(f'RH: check= {check}')
         if torch.rand(1) <= self.prob:
             if self.scaling == 'linear':
                 scaler = torch.rand(1, device=tensor.device) * self.range + self.bounds[0]
@@ -85,31 +88,35 @@ class AddPoissonNoise(Module):
             return tensor
     
     def __repr__(self):
-        return f"AddPoissonNoise(level_bounds={self.level_bounds}, prob={self.prob})"
+        return f"AddPoissonNoise(level_bounds={self.bounds}, prob={self.prob})"
 
 class ScaleDynamicRange(Module):
     """
     Scales the dynamic range of the input tensor.
     RH 2021
     """
-    def __init__(self, scaler_bounds=(0,1)):
+    def __init__(self, scaler_bounds=(0,1), epsilon=1e-9):
         """
         Initializes the class.
         Args:
             scaler_bounds (tuple):
                 The bounds of how much to multiply the image by
                  prior to adding the Poisson noise.
+             epsilon (float):
+                 Value to add to the denominator when normalizing.
         """
         super().__init__()
 
         self.bounds = scaler_bounds
         self.range = scaler_bounds[1] - scaler_bounds[0]
+        
+        self.epsilon = epsilon
     
     def forward(self, tensor):
         tensor_minSub = tensor - tensor.min()
-        return tensor_minSub * (self.range / tensor_minSub.max())
+        return tensor_minSub * (self.range / (tensor_minSub.max()+self.epsilon))
     def __repr__(self):
-        return f"ScaleDynamicRange(scaler_bounds={self.scaler_bounds})"
+        return f"ScaleDynamicRange(scaler_bounds={self.bounds})"
 
 class TileChannels(Module):
     """
@@ -198,7 +205,6 @@ class WarpPoints(Module):
             img_size_out (list):
                 The size of the output image.
         """
-        tik = time.time()
         
         super().__init__()
 
@@ -225,8 +231,6 @@ class WarpPoints(Module):
         self.meshgrid_in =  torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_in[0]),  torch.linspace(-1, 1, self.img_size_in[1]), indexing='ij'), dim=0)[...,None], (1,1,1, n_warps))
         self.meshgrid_out = torch.tile(torch.stack(torch.meshgrid(torch.linspace(-1, 1, self.img_size_out[0]), torch.linspace(-1, 1, self.img_size_out[1]), indexing='ij'), dim=0)[...,None], (1,1,1, n_warps))
         
-        tok = time.time()
-        print('Warp Initialization took:', tok-tik, 's')
 
     def gaus2D(self, x, y, sigma):
         return torch.exp(-((torch.square(self.meshgrid_out[0] - x[None,None,:]) + torch.square(self.meshgrid_out[1] - y[None,None,:]))/(2*torch.square(sigma[None,None,:]))))        
@@ -270,7 +274,7 @@ class Horizontal_stripe_scale(Module):
      phased raster scanning.
     RH 2022
     """
-    def __init__(self, alpha_min_max=(0.5,1), im_size=(36,36)):
+    def __init__(self, alpha_min_max=(0.5,1), im_size=(36,36), prob=0.5):
         """
         Initializes the class.
         Args:
@@ -286,18 +290,23 @@ class Horizontal_stripe_scale(Module):
         
         self.stripes_odd   = (torch.arange(im_size[0]) % 2)
         self.stripes_even = ((torch.arange(im_size[0])+1) % 2)
+        
+        self.prob = prob
 
     def forward(self, tensor):
 #         assert tensor.ndim==3, "RH ERROR: Number of dimensions of input tensor should be 3: (n_images, height, width)"
+        
+        if torch.rand(1) < self.prob:
+            n_ims = tensor.shape[0]
+            alphas_odd  = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
+            alphas_even = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
 
-        n_ims = tensor.shape[0]
-        alphas_odd  = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
-        alphas_even = (torch.rand(n_ims)*self.alpha_range) + self.alpha_min
-        
-        stripes_mask = (self.stripes_odd[None,:]*alphas_odd[:,None]) + (self.stripes_even[None,:]*alphas_even[:,None])
-        mask = torch.ones(tensor.shape[1], tensor.shape[2]) * stripes_mask[:,:,None]
-        
-        return mask*tensor
+            stripes_mask = (self.stripes_odd[None,:]*alphas_odd[:,None]) + (self.stripes_even[None,:]*alphas_even[:,None])
+            mask = torch.ones(tensor.shape[1], tensor.shape[2]) * stripes_mask[:,:,None]
+
+            return mask*tensor
+        else:
+            return tensor
 
 class Horizontal_stripe_shift(Module):
     """
@@ -306,46 +315,97 @@ class Horizontal_stripe_shift(Module):
      phased raster scanning.
     RH 2022
     """
-    def __init__(self, alpha_min_max=(0,5), im_size=(36,36)):
+    def __init__(self, alpha_min_max=(0,5), im_size=(36,36), prob=0.5):
         """
         Initializes the class.
         Args:
             alpha_min_max (2-tuple of ints):
                 Range of absolute shift differences between
-                 adjacent horizontal lines.
+                 adjacent horizontal lines. INCLUSIVE.
                 In pixels.
                 Will be pulled from uniform distribution.
         """
         super().__init__()
         
-        self.alpha_min = alpha_min_max[0]
-        self.alpha_max = alpha_min_max[1]
-        self.alpha_range = alpha_min_max[1] - alpha_min_max[0]
+        self.alpha_min = int(alpha_min_max[0])
+        self.alpha_max = int(alpha_min_max[1] + 1)
+        self.alpha_range = int(alpha_min_max[1] - alpha_min_max[0])
         
         self.idx_odd   = (torch.arange(im_size[0]) % 2).type(torch.bool)
         self.idx_even = ((torch.arange(im_size[0])+1) % 2).type(torch.bool)
+        
+        self.prob = prob
+        
     def forward(self, tensor):
 #         assert tensor.ndim==3, "RH ERROR: Number of dimensions of input tensor should be 3: (n_images, height, width)"
+        
+        if torch.rand(1) < self.prob:
+            n_ims = tensor.shape[0]
+            shape_im = (tensor.shape[1], tensor.shape[2])
 
-        n_ims = tensor.shape[0]
-        shape_im = (tensor.shape[1], tensor.shape[2])
+            alpha = torch.randint(low=self.alpha_min, high=self.alpha_max, size=[n_ims]) * (torch.randint(low=0, high=2, size=[n_ims])*2 - 1)
+#             alpha = (torch.randint(high=self.alpha_max-self.alpha_min, size=[n_ims]) + self.alpha_min) * (torch.randint(high=2, size=[n_ims])*2 - 1)
+            alpha_half = alpha/2
+            alphas_odd  =  torch.ceil(alpha_half).type(torch.int64)
+            alphas_even = -torch.floor(alpha_half).type(torch.int64)
+
+            out = torch.zeros_like(tensor)
+            for ii in range(out.shape[0]):
+                idx_take = slice(max(0, -alphas_odd[ii]) , min(shape_im[1], shape_im[1]-alphas_odd[ii]))
+                idx_put = slice(max(0, alphas_odd[ii]) , min(shape_im[1], shape_im[1]+alphas_odd[ii]))
+                out[ii, self.idx_odd, idx_put] = tensor[ii, self.idx_odd, idx_take]
+
+                idx_take = slice(max(0, -alphas_even[ii]) , min(shape_im[1], shape_im[1]-alphas_even[ii]))
+                idx_put = slice(max(0, alphas_even[ii]) , min(shape_im[1], shape_im[1]+alphas_even[ii]))
+                out[ii, self.idx_even, idx_put] = tensor[ii, self.idx_even, idx_take]
+
+            return out
+        else:
+            return tensor
+
+
+
+class Scale_image_sum(Module):
+    """
+    Scales the entire image so that the sum is user-defined.
+    RH 2022
+    """
+    def __init__(self, sum_val:float=1.0, epsilon=1e-9, min_sub=True):
+        """
+        Initializes the class.
+        Args:
+            sum_val (float):
+                Value used to normalize the sum of each image.
+            epsilon (float):
+                Value added to denominator to prevent 
+                 dividing by zero.
+        """
+        super().__init__()
         
-        alpha = torch.randint(low=self.alpha_min, high=self.alpha_max, size=[n_ims]) * (torch.randint(low=0, high=2, size=[n_ims])*2 - 1)
-        alpha_half = alpha/2
-        alphas_odd  =  torch.ceil(alpha_half).type(torch.int64)
-        alphas_even = -torch.floor(alpha_half).type(torch.int64)
-        
-        out = torch.zeros_like(tensor)
-        for ii in range(out.shape[0]):
-            idx_take = slice(max(0, -alphas_odd[ii]) , min(shape_im[1], shape_im[1]-alphas_odd[ii]))
-            idx_put = slice(max(0, alphas_odd[ii]) , min(shape_im[1], shape_im[1]+alphas_odd[ii]))
-            out[ii, self.idx_odd, idx_put] = tensor[ii, self.idx_odd, idx_take]
-            
-            idx_take = slice(max(0, -alphas_even[ii]) , min(shape_im[1], shape_im[1]-alphas_even[ii]))
-            idx_put = slice(max(0, alphas_even[ii]) , min(shape_im[1], shape_im[1]+alphas_even[ii]))
-            out[ii, self.idx_even, idx_put] = tensor[ii, self.idx_even, idx_take]
-        
+        self.sum_val=sum_val
+        self.epsilon=epsilon
+        self.min_sub=min_sub
+
+    def forward(self, tensor):
+        out = self.sum_val * (tensor / (torch.sum(tensor, dim=(-2,-1), keepdim=True) + self.epsilon))
+        if self.min_sub:
+            out = out - torch.min(torch.min(out, dim=-1, keepdim=True)[0], dim=-1, keepdim=True)[0]
         return out
+    
 
+class Check_NaN(Module):
+    """
+    Checks for NaNs.
+    RH 2022
+    """
+    def __init__(self):
+        super().__init__()
+        
+
+    def forward(self, tensor):
+        if tensor.isnan().any():
+            print('FOUND NaN')
+            
+        return tensor
 
 
