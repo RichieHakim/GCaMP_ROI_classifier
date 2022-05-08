@@ -1,6 +1,15 @@
 import torch
 from torch.nn import Module
+import torchvision.transforms
 import time
+
+
+RandomHorizontalFlip = torchvision.transforms.RandomHorizontalFlip
+def RandomAffine(**kwargs):
+    if 'interpolation' in kwargs:
+        kwargs['interpolation'] = torchvision.transforms.InterpolationMode(kwargs['interpolation'])
+    return torchvision.transforms.RandomAffine(**kwargs)
+
 
 class AddGaussianNoise(Module):
     """
@@ -92,7 +101,7 @@ class AddPoissonNoise(Module):
 
 class ScaleDynamicRange(Module):
     """
-    Scales the dynamic range of the input tensor.
+    Min-max scaling of the input tensor.
     RH 2021
     """
     def __init__(self, scaler_bounds=(0,1), epsilon=1e-9):
