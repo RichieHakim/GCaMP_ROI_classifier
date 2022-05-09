@@ -33,13 +33,11 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-# import matplotlib.pyplot as plt
 
 
 
 
-
-### Parse arguments
+## Parse arguments
 
 import sys
 path_script, path_params, dir_save = sys.argv
@@ -47,6 +45,9 @@ path_script, path_params, dir_save = sys.argv
 import json
 with open(path_params, 'r') as f:
     params = json.load(f)
+
+import shutil
+shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 
 # # dir_save = '/media/rich/bigSSD/analysis_data/ROI_net_training/testing_dispatcher_20220504'
@@ -75,6 +76,8 @@ with open(path_params, 'r') as f:
 #         'persistent_workers': True,
 #         'prefetch_factor': 2,
 #     },
+    
+#     'torchvision_model': 'convnext_tiny',
 
 #     'pre_head_fc_sizes': [128, 128],
 #     'post_head_fc_sizes': [128],
@@ -82,9 +85,11 @@ with open(path_params, 'r') as f:
 #     'n_block_toInclude': 4,
     
 #     'lr': 1*10**-4,
+#     'weight_decay': 0.0000,
 #     'gamma': 1-0.0000,
 #     'n_epochs': 9999999,
 #     'temperature': 0.5,
+#     'l2_alpha': 0.0000,
     
 #     'augmentation': {
 #         'Scale_image_sum': {'sum_val':1, 'epsilon':1e-9, 'min_sub':True},
@@ -211,14 +216,6 @@ dataloader_train = torch.utils.data.DataLoader(
 #     shuffle=True,
 #     drop_last=True,
 #     pin_memory=True,
-#     num_workers=36,
-#     persistent_workers=True,
-#     prefetch_factor=3,
-    
-#     batch_size=1024,
-#     shuffle=False,
-#     drop_last=True,
-#     pin_memory=False,
 #     num_workers=36,
 #     persistent_workers=True,
 #     prefetch_factor=3,
@@ -387,13 +384,14 @@ import torchvision.models
 
 # base_model_frozen = torchvision.models.efficientnet_b0(pretrained=True)
 
-base_model_frozen = torchvision.models.convnext_tiny(pretrained=True)
+# base_model_frozen = torchvision.models.convnext_tiny(pretrained=True)
 # base_model_frozen = torchvision.models.convnext_small(pretrained=True)
 # base_model_frozen = torchvision.models.convnext_base(pretrained=True)
 # base_model_frozen = torchvision.models.convnext_large(pretrained=True)
 
-
 # base_model_frozen = torchvision.models.mobilenet_v3_large(pretrained=True)
+
+base_model_frozen = torchvision.models.__dict__[params['torchvision_model']](pretrained=True)
 
 for param in base_model_frozen.parameters():
     param.requires_grad = False
@@ -499,8 +497,8 @@ criterion = [CrossEntropyLoss()]
 optimizer = Adam(
     model.parameters(), 
     lr=params['lr'],
-#     lr=1*10**-3,
-)
+    weight_decay=params['weight_decay']
+    )
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,
                                                    gamma=params['gamma'],
 #                                                    gamma=1,
@@ -519,7 +517,7 @@ for epoch in tqdm(range(params['n_epochs'])):
         criterion,
         scheduler=scheduler,
         temperature=params['temperature'],
-        # l2_alpha,
+        l2_alpha=params['l2_alpha'],
         mode='semi-supervised',
         loss_rolling_train=losses_train, 
         loss_rolling_val=losses_val,
@@ -552,4 +550,6 @@ for epoch in tqdm(range(params['n_epochs'])):
 
 # model.load_state_dict(torch.load('/media/rich/bigSSD/EfficientNet_b0_7unfrozen_simCLR.pth'))
 # model.eval()
+
+
 
