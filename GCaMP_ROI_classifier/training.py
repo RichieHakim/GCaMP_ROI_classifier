@@ -13,8 +13,18 @@ import time
 from . import util
 
 
-def train_step_simCLR( X_train_batch, y_train_batch, 
-                model, optimizer, criterion, scheduler, temperature, sample_weights):
+def train_step_simCLR( 
+    X_train_batch, 
+    y_train_batch, 
+    model, 
+    optimizer,
+    criterion, 
+    scheduler, 
+    temperature, 
+    sample_weights,
+    penalty_orthogonality=0,
+    inner_batch_size=None,
+    ):
     """
     Performs a single training step.
     RH 2021 / JZ 2021
@@ -55,7 +65,12 @@ def train_step_simCLR( X_train_batch, y_train_batch,
 
     optimizer.zero_grad()
 
-    features = model.forward(X_train_batch)
+    
+    if inner_batch_size is None:
+        features = model.forward(X_train_batch)
+    else:
+        features = torch.cat([model.forward(sub_batch) for sub_batch in make_batches(X_train_batch, batch_size=inner_batch_size)], dim=0)
+    
     torch.cuda.empty_cache()
     
     # logits, labels = info_nce_loss(features, batch_size=X_train_batch.shape[0]/2, n_views=2, temperature=temperature, DEVICE=X_train_batch.device)
@@ -76,11 +91,37 @@ def train_step_simCLR( X_train_batch, y_train_batch,
 
     # print('double_sample_weights', double_sample_weights)
 
-    loss_train.backward()
+    # loss_orthogonality = off_diagonal((features.T @ features)/(X_train_batch.shape[0]-1)).pow_(2).sum().div(features.shape[1])
+    # loss_orthogonality = torch.abs(torch.corrcoef(features.T) * (1 - torch.eye(features.shape[1], device=features.device))).mean()
+    loss_orthogonality = off_diagonal(torch.corrcoef(features.T)).pow_(2).sum().div(features.shape[1])
+    # print(loss_train)
+    # print(loss_orthogonality)
+    # print(penalty_orthogonality * loss_orthogonality)
+    loss = loss_train + penalty_orthogonality * loss_orthogonality
+
+
+    loss.backward()
     optimizer.step()
     scheduler.step()
 
-    return loss_train.item(), pos_over_neg
+    return loss.item(), pos_over_neg
+
+def off_diagonal(x):
+    """
+    Returns the off-diagonal elements of a matrix as a vector.
+    RH 2022
+
+    Args:
+        x (np.ndarray or torch tensor):
+            square matrix to extract off-diagonal elements from.
+
+    Returns:
+        output (np.ndarray or torch tensor):
+            off-diagonal elements of x.
+    """
+    n, m = x.shape
+    assert n == m
+    return x.reshape(-1)[:-1].reshape(n - 1, n + 1)[:, 1:].reshape(-1)
 
 def L2_reg(model):
     penalized_params = util.get_trainable_parameters(model)
@@ -114,10 +155,12 @@ def epoch_step( dataloader,
                 scheduler=None, 
                 temperature=0.5,
                 L2_alpha=0.0, # TODO: implement for simCLR
+                penalty_orthogonality=0,
                 mode='semi-supervised',
                 loss_rolling_train=[], 
                 loss_rolling_val=[],
                 device='cpu', 
+                inner_batch_size=None,
                 do_validation=False,
                 validation_Object=None,
                 verbose=False,
@@ -184,7 +227,18 @@ def epoch_step( dataloader,
         
         # Get batch weights
         if mode == 'semi-supervised':
-            loss, pos_over_neg = train_step_simCLR(X_batch, y_batch, model, optimizer, criterion, scheduler, temperature, torch.as_tensor(sample_weights, device=device)) # Needs to take in weights
+            loss, pos_over_neg = train_step_simCLR(
+                X_batch, 
+                y_batch, 
+                model, 
+                optimizer, 
+                criterion, 
+                scheduler, 
+                temperature, 
+                sample_weights=torch.as_tensor(sample_weights, device=device),
+                penalty_orthogonality=penalty_orthogonality,
+                inner_batch_size=inner_batch_size,
+                ) # Needs to take in weights
         elif mode == 'supervised':
             loss = train_step_classifier(X_batch, y_batch, model, optimizer, criterion, scheduler, L2_alpha=L2_alpha)
         loss_rolling_train.append(loss)
@@ -418,3 +472,41 @@ def richs_contrastive_matrix(features, batch_size, n_views=2, temperature=0.5, D
 
     logits = logits / temperature
     return logits, labels
+
+def make_batches(iterable, batch_size=None, num_batches=5, min_batch_size=0, return_idx=False):
+    """
+    Make batches of data or any other iterable.
+    RH 2021
+
+    Args:
+        iterable (iterable):
+            iterable to be batched
+        batch_size (int):
+            size of each batch
+            if None, then batch_size based on num_batches
+        num_batches (int):
+            number of batches to make
+        min_batch_size (int):
+            minimum size of each batch
+        return_idx (bool):
+            whether to return the indices of the batches.
+            output will be [start, end] idx
+    
+    Returns:
+        output (iterable):
+            batches of iterable
+    """
+    l = len(iterable)
+    
+    if batch_size is None:
+        batch_size = np.int64(np.ceil(l / num_batches))
+    
+    for start in range(0, l, batch_size):
+        end = min(start + batch_size, l)
+        if (end-start) < min_batch_size:
+            break
+        else:
+            if return_idx:
+                yield iterable[start:end], [start, end]
+            else:
+                yield iterable[start:end]
