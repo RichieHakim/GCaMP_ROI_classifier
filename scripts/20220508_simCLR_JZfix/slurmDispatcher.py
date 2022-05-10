@@ -143,11 +143,12 @@ sbatch_config_default = \
 f"""#!/usr/bin/bash
 #SBATCH --job-name=python_test
 #SBATCH --output={log_file}
-#SBATCH --partition=priority
-#SBATCH -c 1
+#SBATCH --partition=gpu_quad
+#SBATCH --gres=gpu:rtx8000:1
+#SBATCH -c 16
 #SBATCH -n 1
-#SBATCH --mem=1GB
-#SBATCH --time=0-00:01:40
+#SBATCH --mem=100GB
+#SBATCH --time=0-01:00:00
 
 python "$@"
 """
@@ -163,7 +164,7 @@ name_save='jobNum_'
 server.batch_run(paths_scripts=paths_scripts,
                     params_list=params_list,
                     sbatch_config_list=sbatch_config_list,
-                    max_n_jobs=9,
+                    max_n_jobs=20,
                     dir_save=dir_save,
                     name_save='jobNum_',
                     verbose=True,
