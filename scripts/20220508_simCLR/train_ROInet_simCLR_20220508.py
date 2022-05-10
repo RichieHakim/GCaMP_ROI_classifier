@@ -35,8 +35,6 @@ import torchvision.transforms as transforms
 
 
 
-
-
 ## Parse arguments
 
 import sys
@@ -53,10 +51,11 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 # # dir_save = '/media/rich/bigSSD/analysis_data/ROI_net_training/testing_dispatcher_20220504'
 # dir_save = Path(r'/media/rich/bigSSD/')
 
+# # params_template = {
 # params = {
 #     'paths': {
 #         'dir_github':'/media/rich/Home_Linux_partition/github_repos',
-#         'fileName_save_model':'EfficientNet_b0_7unfrozen_simCLR',
+#         'fileName_save_model':'ConvNext_tiny_1.0unfrozen_simCLR',
 #         'path_data_training':'/media/rich/bigSSD/analysis_data/ROIs_for_training/sf_sparse_36x36_20220503.npz',
 #     },
     
@@ -76,15 +75,17 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 #         'persistent_workers': True,
 #         'prefetch_factor': 2,
 #     },
-    
+#     'inner_batch_size': 256,
+
 #     'torchvision_model': 'convnext_tiny',
 
-#     'pre_head_fc_sizes': [128, 128],
+#     'pre_head_fc_sizes': [256, 128],
 #     'post_head_fc_sizes': [128],
-#     'block_to_unfreeze': '1.2',
-#     'n_block_toInclude': 4,
+#     'block_to_unfreeze': '7.0',
+#     'n_block_toInclude': 9,
     
-#     'lr': 1*10**-4,
+#     'lr': 5*10**-3,
+#     'penalty_orthogonality':0,
 #     'weight_decay': 0.0000,
 #     'gamma': 1-0.0000,
 #     'n_epochs': 9999999,
@@ -93,15 +94,15 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
     
 #     'augmentation': {
 #         'Scale_image_sum': {'sum_val':1, 'epsilon':1e-9, 'min_sub':True},
-#         'AddPoissonNoise': {'scaler_bounds':(10**(4), 10**(5)), 'prob':0.5, 'base':1000, 'scaling':'log'},
-#         'Horizontal_stripe_scale': {'alpha_min_max':(0.5, 1), 'im_size':(36,36), 'prob':0.5},
-#         'Horizontal_stripe_shift': {'alpha_min_max':(1  , 3), 'im_size':(36,36), 'prob':0.5},
+#         'AddPoissonNoise': {'scaler_bounds':(10**(3.5), 10**(4)), 'prob':0.7, 'base':1000, 'scaling':'log'},
+#         'Horizontal_stripe_scale': {'alpha_min_max':(0.5, 1), 'im_size':(36,36), 'prob':0.3},
+#         'Horizontal_stripe_shift': {'alpha_min_max':(1  , 2), 'im_size':(36,36), 'prob':0.3},
 #         'RandomHorizontalFlip': {'p':0.5},
 #         'RandomAffine': {
 #             'degrees':(-180,180),
 #             'translate':(0.1, 0.1), #0, .3, .45 (DEFAULT)
 #             'scale':(0.6, 1.2), # no scale (1,1), (0.4, 1.5)
-#             'shear':(-15, 15, -15, 15),
+#             'shear':(-8, 8, -8, 8),
 # #             'interpolation':torchvision.transforms.InterpolationMode.BILINEAR, 
 #             'interpolation':'bilinear', 
 #             'fill':0, 
@@ -119,7 +120,8 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 #             'n_warps':2,
 #             'prob':0.5,
 #             'img_size_in':[36, 36],
-#             'img_size_out':[72,72],
+# #             'img_size_out':[72,72],
+#             'img_size_out':[224,224],
 #         },
 #         'TileChannels': {'dim':0, 'n_channels':3},
 #     },
@@ -219,11 +221,20 @@ dataloader_train = torch.utils.data.DataLoader(
 #     num_workers=36,
 #     persistent_workers=True,
 #     prefetch_factor=3,
+    
+#     batch_size=1024,
+#     shuffle=False,
+#     drop_last=True,
+#     pin_memory=False,
+#     num_workers=36,
+#     persistent_workers=True,
+#     prefetch_factor=3,
 )
 
+# import matplotlib.pyplot as plt
 # %matplotlib notebook
 
-# idx_rand = np.random.randint(0,masks_cat2.shape[0], 10)
+# idx_rand = np.random.randint(0,masks_cat.shape[0], 10)
 # for ii in idx_rand:
 #     fig, axs = plt.subplots(1,2)
 #     # print(dataset_train[ii][0][0][0].shape)
@@ -237,7 +248,17 @@ dataloader_train = torch.utils.data.DataLoader(
 ### Define ModelTackOn
 
 class ModelTackOn(torch.nn.Module):
-    def __init__(self, base_model, un_modified_model, data_dim=(1,3,36,36), pre_head_fc_sizes=[100], post_head_fc_sizes=[100], classifier_fc_sizes=None):
+    def __init__(
+        self, 
+        base_model, 
+        un_modified_model,
+        data_dim=(1,3,36,36), 
+        pre_head_fc_sizes=[100], 
+        post_head_fc_sizes=[100], 
+        classifier_fc_sizes=None, 
+        nonlinearity='relu', 
+        kwargs_nonlinearity={},
+    ):
             super(ModelTackOn, self).__init__()
             self.base_model = base_model
             final_base_layer = list(un_modified_model.children())[-1]
@@ -249,12 +270,15 @@ class ModelTackOn(torch.nn.Module):
             self.pre_head_fc_lst = []
             self.post_head_fc_lst = []
             self.classifier_fc_lst = []
+                
+            self.nonlinearity = nonlinearity
+            self.kwargs_nonlinearity = kwargs_nonlinearity
 
             self.init_prehead(final_base_layer, pre_head_fc_sizes)
             self.init_posthead(pre_head_fc_sizes[-1], post_head_fc_sizes)
             if classifier_fc_sizes is not None:
                 self.init_classifier(pre_head_fc_sizes[-1], classifier_fc_sizes)
-        
+            
     def init_prehead(self, prv_layer, pre_head_fc_sizes):
         for i, pre_head_fc in enumerate(pre_head_fc_sizes):
             if i == 0:
@@ -271,7 +295,9 @@ class ModelTackOn(torch.nn.Module):
             self.pre_head_fc_lst.append(fc_layer)
 
 #             if i < len(pre_head_fc_sizes) - 1:
-            non_linearity = torch.nn.ReLU()
+#             non_linearity = torch.nn.ReLU()
+#             non_linearity = torch.nn.GELU()
+            non_linearity = torch.nn.__dict__[self.nonlinearity](**self.kwargs_nonlinearity)
             self.add_module(f'PreHead_{i}_NonLinearity', non_linearity)
             self.pre_head_fc_lst.append(non_linearity)
 
@@ -285,10 +311,11 @@ class ModelTackOn(torch.nn.Module):
             self.add_module(f'PostHead_{i}', fc_layer)
             self.post_head_fc_lst.append(fc_layer)
 
-            if i < len(post_head_fc_sizes) - 1:
-                non_linearity = torch.nn.ReLU()
-                self.add_module(f'PostHead_{i}_NonLinearity', non_linearity)
-                self.pre_head_fc_lst.append(non_linearity)
+#                 non_linearity = torch.nn.ReLU()
+#                 non_linearity = torch.nn.GELU()
+            non_linearity = torch.nn.__dict__[self.nonlinearity](**self.kwargs_nonlinearity)    
+            self.add_module(f'PostHead_{i}_NonLinearity', non_linearity)
+            self.pre_head_fc_lst.append(non_linearity)
     
     def init_classifier(self, prv_size, classifier_fc_sizes):
             for i, classifier_fc in enumerate(classifier_fc_sizes):
@@ -389,6 +416,7 @@ import torchvision.models
 # base_model_frozen = torchvision.models.convnext_base(pretrained=True)
 # base_model_frozen = torchvision.models.convnext_large(pretrained=True)
 
+
 # base_model_frozen = torchvision.models.mobilenet_v3_large(pretrained=True)
 
 base_model_frozen = torchvision.models.__dict__[params['torchvision_model']](pretrained=True)
@@ -424,7 +452,9 @@ model = ModelTackOn(
     data_dim=data_dim,
     pre_head_fc_sizes=params['pre_head_fc_sizes'], 
     post_head_fc_sizes=params['post_head_fc_sizes'], 
-    classifier_fc_sizes=None
+    classifier_fc_sizes=None,
+    nonlinearity='GELU',
+    kwargs_nonlinearity={},
 )
 model.train();
 
@@ -451,8 +481,7 @@ for ii, (name, param) in enumerate(model.named_parameters()):
 
 names_layers_requiresGrad = [( param.requires_grad , name ) for name,param in list(model.named_parameters())]
 
-# print('MODEL: (requires_grad , layer_name)')
-# [print(name) for name in params_calculated['names_layers_requiresGrad']];
+# names_layers_requiresGrad
 
 
 
@@ -497,8 +526,8 @@ criterion = [CrossEntropyLoss()]
 optimizer = Adam(
     model.parameters(), 
     lr=params['lr'],
-    weight_decay=params['weight_decay']
-    )
+#     lr=1*10**-2,
+)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,
                                                    gamma=params['gamma'],
 #                                                    gamma=1,
@@ -517,11 +546,13 @@ for epoch in tqdm(range(params['n_epochs'])):
         criterion,
         scheduler=scheduler,
         temperature=params['temperature'],
-        l2_alpha=params['l2_alpha'],
+        # l2_alpha,
+        penalty_orthogonality=params['penalty_orthogonality'],
         mode='semi-supervised',
         loss_rolling_train=losses_train, 
         loss_rolling_val=losses_val,
         device=device_train, 
+        inner_batch_size=params['inner_batch_size'],
         verbose=2,
         verbose_update_period=1,
 
@@ -544,12 +575,12 @@ for epoch in tqdm(range(params['n_epochs'])):
     if params['prefs']['saveModelIteratively']:
         torch.save(model.state_dict(), path_saveModel)
 
+# import matplotlib.pyplot as plt
+# %matplotlib notebook
 # plt.figure()
 # plt.plot(losses_train)
-
+# # plt.yscale('log')
 
 # model.load_state_dict(torch.load('/media/rich/bigSSD/EfficientNet_b0_7unfrozen_simCLR.pth'))
 # model.eval()
-
-
 
