@@ -83,7 +83,8 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 #     'post_head_fc_sizes': [128],
 #     'block_to_unfreeze': '7.0',
 #     'n_block_toInclude': 9,
-    
+#     'head_nonlinearity': 'GELU',
+
 #     'lr': 5*10**-3,
 #     'penalty_orthogonality':0,
 #     'weight_decay': 0.0000,
@@ -453,7 +454,7 @@ model = ModelTackOn(
     pre_head_fc_sizes=params['pre_head_fc_sizes'], 
     post_head_fc_sizes=params['post_head_fc_sizes'], 
     classifier_fc_sizes=None,
-    nonlinearity='GELU',
+    nonlinearity=params['head_nonlinearity'],
     kwargs_nonlinearity={},
 )
 model.train();
