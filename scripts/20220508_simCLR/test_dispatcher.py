@@ -163,8 +163,7 @@ cd /n/data1/hms/neurobio/sabatini/rich/
 module load gcc/9.2.0
 module load conda2
 
-conda activate ROI_env
-source activate ROI_env
+# source activate ROI_env
 date
 
 python "$@"
