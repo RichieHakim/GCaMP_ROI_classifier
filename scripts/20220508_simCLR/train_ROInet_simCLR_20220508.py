@@ -39,6 +39,7 @@ import torchvision.transforms as transforms
 
 import sys
 path_script, path_params, dir_save = sys.argv
+dir_save = Path(dir_save)
                 
 import json
 with open(path_params, 'r') as f:
