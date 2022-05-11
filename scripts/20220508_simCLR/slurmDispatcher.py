@@ -12,7 +12,8 @@ import itertools
 
 ### Import personal libraries
 # dir_github = '/media/rich/Home_Linux_partition/github_repos'
-dir_github = '/n/data1/hms/neurobio/sabatini/josh/github_repos'
+# dir_github = '/n/data1/hms/neurobio/sabatini/josh/github_repos'
+dir_github = '/n/data1/hms/neurobio/sabatini/rich/github_repos',
 
 import sys
 sys.path.append(dir_github)
@@ -23,23 +24,22 @@ from basic_neural_processing_modules import container_helpers, server
 
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
-# dir_save='/n/data1/hms/neurobio/sabatini/rich/analysis/test_dispatcher_ROInet'
-dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
+# dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220510_testingSimCLRscript'
 
 path_log = str(Path(dir_save) / 'python_01_%j.log')
 
-path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+# path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
 
-
-
-# dir_save = '/media/rich/bigSSD/analysis_data/ROI_net_training/testing_dispatcher_20220504'
-dir_save = Path(r'/media/rich/bigSSD/')
 
 params_template = {
     'paths': {
-        'dir_github':'/media/rich/Home_Linux_partition/github_repos',
-        'fileName_save_model':'ConvNext_tiny_1.0unfrozen_simCLR',
-        'path_data_training':'/media/rich/bigSSD/analysis_data/ROIs_for_training/sf_sparse_36x36_20220503.npz',
+        # 'dir_github': '/media/rich/Home_Linux_partition/github_repos',
+        'dir_github': dir_github,
+        'fileName_save_model': 'ConvNext_tiny__1_0_unfrozen__simCLR',
+        # 'path_data_training': '/media/rich/bigSSD/analysis_data/ROIs_for_training/sf_sparse_36x36_20220503.npz',
+        'path_data_training': '/n/data1/hms/neurobio/sabatini/rich/data/ROI_network_data/sf_sparse_36x36_20220503.npz',
     },
     
     'prefs': {
@@ -172,7 +172,7 @@ server.batch_run(paths_scripts=paths_scripts,
                     params_list=params_list,
                     sbatch_config_list=sbatch_config_list,
                     max_n_jobs=max_n_jobs,
-                    dir_save=dir_save,
+                    dir_save=str(dir_save),
                     name_save=name_save,
                     verbose=True,
                     )
