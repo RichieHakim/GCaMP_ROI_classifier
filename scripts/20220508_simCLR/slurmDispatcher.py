@@ -82,7 +82,7 @@ params_template = {
     
     'augmentation': {
         'Scale_image_sum': {'sum_val':1, 'epsilon':1e-9, 'min_sub':True},
-        'AddPoissonNoise': {'scaler_bounds':(10**(3.5), 10**(4)), 'prob':0.7, 'base':1000, 'scaling':'log'},
+        'AddPoissonNoise': {'scaler_bounds':(1.0*10**(3.5), 1.0*10**(4)), 'prob':0.7, 'base':1000, 'scaling':'log'},
         'Horizontal_stripe_scale': {'alpha_min_max':(0.5, 1), 'im_size':(36,36), 'prob':0.3},
         'Horizontal_stripe_shift': {'alpha_min_max':(1  , 2), 'im_size':(36,36), 'prob':0.3},
         'RandomHorizontalFlip': {'p':0.5},
