@@ -18,9 +18,10 @@
 
 import sys
 print(sys.version_info)
-print(os.environ['CONDA_DEFAULT_ENV'])
 
 import os
+print(os.environ['CONDA_DEFAULT_ENV'])
+
 import copy
 import pathlib
 from pathlib import Path

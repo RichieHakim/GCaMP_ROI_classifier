@@ -158,13 +158,21 @@ f"""#!/usr/bin/zsh
 #SBATCH --mem=2GB
 #SBATCH --time=0-00:00:10
 
-unset XDG_RUNTIME_DIR
+
 cd /n/data1/hms/neurobio/sabatini/rich/
 module load gcc/9.2.0 cuda/11.2 conda2
-source activate ROI_env
+
+conda init bash
+conda activate ROI_env
 
 python "$@"
 """
+
+# date;hostname;pwd
+# unset XDG_RUNTIME_DIR
+
+# source activate ROI_env
+
 
 ## run batch_run function
 paths_scripts = [path_script]
