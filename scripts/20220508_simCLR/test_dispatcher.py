@@ -159,7 +159,7 @@ f"""#!/usr/bin/bash
 date;hostname;pwd
 
 cd /n/groups/datta/
-source /etc/profile.d/modules.csh
+source /etc/profile.d/modules.sh
 . /etc/profile 
 module purge
 module load gcc/9.2.0
