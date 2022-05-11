@@ -416,7 +416,7 @@ class ModelTackOn(torch.nn.Module):
 ### Import pretrained model
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  importing pretrained model')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  importing pretrained model...')
 
 import torchvision.models
 
@@ -455,7 +455,7 @@ if pref_log_all_steps:
 ## 3. Tack on a linear layer of the correct size  (internally done in ModelTackOn)
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  making combined model')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  making combined model...')
 
 model_chopped = torch.nn.Sequential(list(base_model_frozen.children())[0][:params['n_block_toInclude']])  ## 0.
 model_chopped_pooled = torch.nn.Sequential(model_chopped, torch.nn.AdaptiveAvgPool2d(output_size=1), torch.nn.Flatten())  ## 1.
@@ -486,7 +486,7 @@ if pref_log_all_steps:
 ### unfreeze particular blocks in model
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  unfreezing layers')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  unfreezing layers...')
 
 mnp = [name for name, param in model.named_parameters()]  ## 'model named parameters'
 mnp_blockNums = [name[name.find('.'):name.find('.')+8] for name in mnp]  ## pulls out the numbers just after the model name
@@ -518,7 +518,7 @@ if pref_log_all_steps:
 ## The training step is written so that it can run until a job ends, so this needs to be saved before
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  saving run outputs')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  saving run outputs...')
 
 run_outputs = {
     'dir_save': str(dir_save),    
@@ -547,7 +547,7 @@ if pref_log_all_steps:
 ### Training
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  preparing training')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  preparing training...')
 
 
 model.to(device_train)
@@ -571,7 +571,7 @@ scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,
 criterion = [_.to(device_train) for _ in criterion]
 
 if pref_log_all_steps:
-    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  starting training')
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  starting training...')
 
 
 # model.load_state_dict(torch.load('/media/rich/bigSSD/ConvNext_tiny_1.pth'))

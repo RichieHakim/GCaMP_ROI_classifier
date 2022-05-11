@@ -72,8 +72,8 @@ params_template = {
     'n_block_toInclude': 9,
     'head_nonlinearity': 'GELU',
     
-    'lr': 1*10**-2,
-    'penalty_orthogonality':0.05,
+    'lr': 1*10**-2.5,
+    'penalty_orthogonality':0.00,
     'weight_decay': 0.0000,
     'gamma': 1-0.0000,
     'n_epochs': 9999999,
@@ -119,7 +119,7 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03]]
+params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03, 0.1, 0.3]]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -158,7 +158,7 @@ f"""#!/usr/bin/bash
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
-#SBATCH --time=0-00:05:00
+#SBATCH --time=1-00:00:00
 
 unset XDG_RUNTIME_DIR
 
