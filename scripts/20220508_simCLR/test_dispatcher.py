@@ -148,7 +148,7 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 
 ## define slurm SBATCH parameters
 sbatch_config_default = \
-f"""#!/usr/bin/bash
+f"""#!/usr/bin/zsh
 #SBATCH --job-name=jupyter
 #SBATCH --output={path_log}
 #SBATCH --partition=priority
