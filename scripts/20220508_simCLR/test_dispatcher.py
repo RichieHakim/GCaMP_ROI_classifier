@@ -159,7 +159,9 @@ f"""#!/usr/bin/zsh
 date;hostname;pwd
 
 cd /n/groups/datta/
-module load gcc/6.2.0 conda2
+module purge
+module load gcc/9.2.0
+module load conda2
 source activate ROI_env
 date
 
