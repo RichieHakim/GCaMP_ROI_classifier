@@ -148,7 +148,7 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 
 ## define slurm SBATCH parameters
 sbatch_config_default = \
-f"""#!/usr/bin/zsh
+f"""#!/usr/bin/bash
 #SBATCH --job-name=simCLR_test
 #SBATCH --output={path_log}
 #SBATCH --partition=gpu_quad
