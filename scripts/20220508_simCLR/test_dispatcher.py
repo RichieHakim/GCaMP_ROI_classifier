@@ -158,9 +158,9 @@ f"""#!/usr/bin/bash
 #SBATCH --mem=2GB
 #SBATCH --time=0-00:00:10
 
+source activate ROI_env
 cd /n/data1/hms/neurobio/sabatini/rich/
 module load gcc/9.2.0 cuda/11.2 conda2
-source activate ROI_env
 
 python "$@"
 """
