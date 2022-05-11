@@ -162,6 +162,7 @@ f"""#!/usr/bin/bash
 cd /n/data1/hms/neurobio/sabatini/rich/
 module load gcc/9.2.0 cuda/11.2 conda2
 
+eval "$($(which conda) 'shell.bash' 'hook')"
 conda activate ROI_env
 
 python "$@"
