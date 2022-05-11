@@ -155,7 +155,7 @@ f"""#!/usr/bin/bash
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH -c 2
 #SBATCH -n 1
-#SBATCH --mem=2GB
+#SBATCH --mem=3GB
 #SBATCH --time=0-00:00:10
 
 unset XDG_RUNTIME_DIR
