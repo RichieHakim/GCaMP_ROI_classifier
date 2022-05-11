@@ -166,7 +166,7 @@ cd /n/data1/hms/neurobio/sabatini/rich/
 date
 module load gcc/9.2.0
 
-source activate fr_env
+source activate ROI_env
 
 python "$@"
 """
