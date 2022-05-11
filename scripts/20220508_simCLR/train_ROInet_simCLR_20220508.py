@@ -174,6 +174,12 @@ device_train = torch_helpers.set_device(use_GPU=params['useGPU_training'], verbo
 
 
 
+write_to_log(path_log=path_saveLog, text=f'sys.version: {sys.version_info}')
+write_to_log(path_log=path_saveLog, text=f"sys.version: {os.environ['CONDA_DEFAULT_ENV']}")
+
+
+
+
 ### Import unlabeled training data
 
 import scipy.sparse
