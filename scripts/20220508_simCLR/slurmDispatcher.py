@@ -34,6 +34,7 @@ path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classi
 
 
 params_template = {
+    'pref_log_all_steps': True,
     'paths': {
         # 'dir_github': '/media/rich/Home_Linux_partition/github_repos',
         'dir_github': dir_github,

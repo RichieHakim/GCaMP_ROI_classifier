@@ -58,6 +58,7 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 # # params_template = {
 # params = {
+#     'pref_log_all_steps': True,
 #     'paths': {
 #         'dir_github':'/media/rich/Home_Linux_partition/github_repos',
 #         'fileName_save_model':'ConvNext_tiny_1.0unfrozen_simCLR',
@@ -170,17 +171,21 @@ path_saveLoss = (dir_save / 'loss.npy')
 
 device_train = torch_helpers.set_device(use_GPU=params['useGPU_training'], verbose=False)
 
+pref_log_all_steps = params['pref_log_all_steps']
 
 
 
-
-write_to_log(path_log=path_saveLog, text=f'sys.version: {sys.version_info}')
-write_to_log(path_log=path_saveLog, text=f"sys.version: {os.environ['CONDA_DEFAULT_ENV']}")
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'sys.version: {sys.version_info}')
+    write_to_log(path_log=path_saveLog, text=f"sys.version: {os.environ['CONDA_DEFAULT_ENV']}")
 
 
 
 
 ### Import unlabeled training data
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  loading data...')
 
 import scipy.sparse
 
@@ -199,11 +204,16 @@ masks_cat = sf_dense[ROIs_toKeep]
 n_masks_removed = np.sum(sf_dense.shape[0] - ROIs_toKeep.shape[0])
 # print(f'Number of masks: {masks_cat.shape}')
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  data loaded.')
 
 
 
 
 ### Define augmentation pipeline
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  constructing augmentation pipeline and dataloader...')
 
 transforms = torch.nn.Sequential(
     *[augmentation.__dict__[key](**params) for key,params in params['augmentation'].items()]
@@ -240,6 +250,9 @@ dataloader_train = torch.utils.data.DataLoader(
 #     # print(dataset_train[ii][0][0][0].shape)
 #     axs[0].imshow(dataset_train[ii][0][0][0].cpu())
 #     axs[1].imshow(dataset_train[ii][0][1][0].cpu())
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  augmentation pipeline and dataloader constructed.')
 
 
 
@@ -402,6 +415,9 @@ class ModelTackOn(torch.nn.Module):
 
 ### Import pretrained model
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  importing pretrained model')
+
 import torchvision.models
 
 # base_model_frozen = torchvision.models.resnet101(pretrained=True)
@@ -424,7 +440,8 @@ base_model_frozen = torchvision.models.__dict__[params['torchvision_model']](pre
 for param in base_model_frozen.parameters():
     param.requires_grad = False
 
-
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  imported pretrained model')
 
 
 
@@ -437,6 +454,8 @@ for param in base_model_frozen.parameters():
 ## 2. Determine the size of the output (internally done in ModelTackOn)
 ## 3. Tack on a linear layer of the correct size  (internally done in ModelTackOn)
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  making combined model')
 
 model_chopped = torch.nn.Sequential(list(base_model_frozen.children())[0][:params['n_block_toInclude']])  ## 0.
 model_chopped_pooled = torch.nn.Sequential(model_chopped, torch.nn.AdaptiveAvgPool2d(output_size=1), torch.nn.Flatten())  ## 1.
@@ -458,11 +477,16 @@ model = ModelTackOn(
 )
 model.train();
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  made combined model')
 
 
 
 
 ### unfreeze particular blocks in model
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  unfreezing layers')
 
 mnp = [name for name, param in model.named_parameters()]  ## 'model named parameters'
 mnp_blockNums = [name[name.find('.'):name.find('.')+8] for name in mnp]  ## pulls out the numbers just after the model name
@@ -483,6 +507,8 @@ names_layers_requiresGrad = [( param.requires_grad , name ) for name,param in li
 
 # names_layers_requiresGrad
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  finished unfreezing layers')
 
 
 
@@ -490,6 +516,9 @@ names_layers_requiresGrad = [( param.requires_grad , name ) for name,param in li
 ### Save run outputs
 
 ## The training step is written so that it can run until a job ends, so this needs to be saved before
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  saving run outputs')
 
 run_outputs = {
     'dir_save': str(dir_save),    
@@ -509,11 +538,17 @@ import json
 with open(run_outputs['path_save_runOutputs'], 'w') as f:
     json.dump(run_outputs, f) 
 
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  saved run outputs')
 
 
 
 
 ### Training
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  preparing training')
+
 
 model.to(device_train)
 model.prep_contrast()
@@ -534,6 +569,10 @@ scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,
                                                   )
 
 criterion = [_.to(device_train) for _ in criterion]
+
+if pref_log_all_steps:
+    write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  starting training')
+
 
 # model.load_state_dict(torch.load('/media/rich/bigSSD/ConvNext_tiny_1.pth'))
 
