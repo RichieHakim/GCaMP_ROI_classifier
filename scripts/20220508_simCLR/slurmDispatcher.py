@@ -13,7 +13,7 @@ import itertools
 ### Import personal libraries
 # dir_github = '/media/rich/Home_Linux_partition/github_repos'
 # dir_github = '/n/data1/hms/neurobio/sabatini/josh/github_repos'
-dir_github = '/n/data1/hms/neurobio/sabatini/rich/github_repos',
+dir_github = '/n/data1/hms/neurobio/sabatini/rich/github_repos'
 
 import sys
 sys.path.append(dir_github)
