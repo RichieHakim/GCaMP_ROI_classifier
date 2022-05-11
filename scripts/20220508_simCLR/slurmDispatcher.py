@@ -16,7 +16,7 @@ import sys
 sys.path.append(dir_github)
 # %load_ext autoreload
 # %autoreload 2
-from basic_neural_processing_modules import indexing, server
+from basic_neural_processing_modules import container_helpers, server
 
 
 ## set paths
@@ -103,10 +103,10 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [indexing.deep_update_dict(params, ['dataloader_kwargs', 'prefetch_factor'], val) for val in [4,5,6]]
-params = indexing.flatten_list([[indexing.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
+params = [container_helpers.deep_update_dict(params, ['dataloader_kwargs', 'prefetch_factor'], val) for val in [4,5,6]]
+params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
-params_unchanging, params_changing = indexing.find_differences_across_dictionaries(params)
+params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
 
 
 

@@ -71,9 +71,12 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 #         'shuffle': True,
 #         'drop_last': True,
 #         'pin_memory': True,
-#         'num_workers': 36,
+#         'num_workers': 18,
 #         'persistent_workers': True,
 #         'prefetch_factor': 2,
+# #         'num_workers': 4,
+# #         'persistent_workers': True,
+# #         'prefetch_factor': 1,
 #     },
 #     'inner_batch_size': 256,
 
@@ -81,16 +84,16 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 #     'pre_head_fc_sizes': [256, 128],
 #     'post_head_fc_sizes': [128],
-#     'block_to_unfreeze': '7.0',
+#     'block_to_unfreeze': '6.0',
 #     'n_block_toInclude': 9,
 #     'head_nonlinearity': 'GELU',
-
-#     'lr': 5*10**-3,
-#     'penalty_orthogonality':0,
+    
+#     'lr': 1*10**-2,
+#     'penalty_orthogonality':0.05,
 #     'weight_decay': 0.0000,
 #     'gamma': 1-0.0000,
 #     'n_epochs': 9999999,
-#     'temperature': 0.5,
+#     'temperature': 0.1,
 #     'l2_alpha': 0.0000,
     
 #     'augmentation': {
@@ -214,22 +217,6 @@ dataset_train = dataset.dataset_simCLR(
 dataloader_train = torch.utils.data.DataLoader(
     dataset_train,
     **params['dataloader_kwargs']
-
-#     batch_size=1024,
-#     shuffle=True,
-#     drop_last=True,
-#     pin_memory=True,
-#     num_workers=36,
-#     persistent_workers=True,
-#     prefetch_factor=3,
-    
-#     batch_size=1024,
-#     shuffle=False,
-#     drop_last=True,
-#     pin_memory=False,
-#     num_workers=36,
-#     persistent_workers=True,
-#     prefetch_factor=3,
 )
 
 # import matplotlib.pyplot as plt
@@ -536,6 +523,8 @@ scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,
 
 criterion = [_.to(device_train) for _ in criterion]
 
+# model.load_state_dict(torch.load('/media/rich/bigSSD/ConvNext_tiny_1.pth'))
+
 losses_train, losses_val = [], [np.nan]
 for epoch in tqdm(range(params['n_epochs'])):
     print(f'epoch: {epoch}')
@@ -575,13 +564,3 @@ for epoch in tqdm(range(params['n_epochs'])):
     ## save model
     if params['prefs']['saveModelIteratively']:
         torch.save(model.state_dict(), path_saveModel)
-
-# import matplotlib.pyplot as plt
-# %matplotlib notebook
-# plt.figure()
-# plt.plot(losses_train)
-# # plt.yscale('log')
-
-# model.load_state_dict(torch.load('/media/rich/bigSSD/EfficientNet_b0_7unfrozen_simCLR.pth'))
-# model.eval()
-
