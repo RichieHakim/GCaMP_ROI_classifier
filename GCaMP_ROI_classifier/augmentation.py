@@ -55,7 +55,7 @@ class AddPoissonNoise(Module):
     Adds Poisson noise to the input tensor.
     RH 2021
     """
-    def __init__(self, scaler_bounds=(0.1,1), prob=1, base=10, scaling='log'):
+    def __init__(self, scaler_bounds=(0.1,1.0), prob=1, base=10, scaling='log'):
         """
         Initializes the class.
         Args:
