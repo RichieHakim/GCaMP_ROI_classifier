@@ -127,6 +127,7 @@ params_unchanging, params_changing = container_helpers.find_differences_across_d
 
 ## copy script .py file to dir_save
 import shutil
+Path(dir_save).mkdir(parents=True, exist_ok=True)
 shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 
