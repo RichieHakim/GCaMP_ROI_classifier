@@ -162,7 +162,7 @@ cd /n/data1/hms/neurobio/sabatini/rich/
 
 
 date
-source activate ROI_env
+source activate fr_env
 date
 module load gcc/9.2.0
 
