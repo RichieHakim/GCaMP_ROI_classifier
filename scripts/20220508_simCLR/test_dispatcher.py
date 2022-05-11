@@ -159,6 +159,7 @@ f"""#!/usr/bin/bash
 date;hostname;pwd
 
 cd /n/groups/datta/
+source /etc/profile.d/modules.csh
 . /etc/profile 
 module purge
 module load gcc/9.2.0
@@ -168,8 +169,6 @@ date
 
 python "$@"
 """
-
-# source /etc/profile.d/modules.csh
 
 # f"""#!/usr/bin/bash
 # #SBATCH --job-name=simCLR_test
