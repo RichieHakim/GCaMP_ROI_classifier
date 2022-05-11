@@ -158,10 +158,19 @@ f"""#!/usr/bin/bash
 #SBATCH --mem=14GB
 #SBATCH --time=0-00:01:00
 
+unset XDG_RUNTIME_DIR
+
 cd /n/data1/hms/neurobio/sabatini/rich/
-module load gcc/9.2.0 cuda/11.2 conda2
+
+date
+
+echo "loading modules"
+module load gcc/9.2.0 cuda/11.2
+
+echo "activating environment"
 source activate ROI_env
 
+echo "starting job"
 python "$@"
 """
 

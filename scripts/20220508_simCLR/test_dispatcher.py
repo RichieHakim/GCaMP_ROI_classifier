@@ -173,43 +173,6 @@ source activate ROI_env
 echo "starting job"
 python "$@"
 """
-# module load gcc/9.2.0
-# module load conda2
-
-# f"""#!/usr/bin/bash
-# #SBATCH --job-name=simCLR_test
-# #SBATCH --output={path_log}
-# #SBATCH --partition=gpu_quad
-# #SBATCH --gres=gpu:rtx8000:1
-# #SBATCH -c 2
-# #SBATCH -n 1
-# #SBATCH --mem=2GB
-# #SBATCH --time=0-00:00:10
-
-
-# cd /n/data1/hms/neurobio/sabatini/rich/
-
-# echo "loading modules"
-# module load gcc/9.2.0 cuda/11.2 conda2
-
-# echo "activating environment"
-# eval "$($(which conda) 'shell.bash' 'hook')"
-# conda activate ROI_env
-
-# echo "starting job"
-# python "$@"
-# """
-
-# # conda init bash
-
-# # date;hostname;pwd
-# # unset XDG_RUNTIME_DIR
-
-# # source activate ROI_env
-
-#  source /etc/profile.d/modules.sh
-# . /etc/profile 
-# module purge
 
 ## run batch_run function
 paths_scripts = [path_script]

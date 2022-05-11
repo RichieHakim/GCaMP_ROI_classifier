@@ -17,7 +17,11 @@
 # !pip3 install numpy==1.20
 
 import sys
+print(sys.version_info)
+
 import os
+print(os.environ['CONDA_DEFAULT_ENV'])
+
 import copy
 import pathlib
 from pathlib import Path
@@ -141,6 +145,7 @@ shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 import sys
 
 sys.path.append(params['paths']['dir_github'])
+sys.path.append(str(Path(params['paths']['dir_github']) / 'GCaMP_ROI_classifier'))
 
 # %load_ext autoreload
 # %autoreload 2
