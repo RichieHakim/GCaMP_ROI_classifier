@@ -149,25 +149,28 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 ## define slurm SBATCH parameters
 sbatch_config_default = \
 f"""#!/usr/bin/bash
-#SBATCH --job-name=jupyter
+#SBATCH --job-name=simCLR_test
 #SBATCH --output={path_log}
-#SBATCH --partition=priority
+#SBATCH --partition=gpu_quad
+#SBATCH --gres=gpu:rtx8000:1
 #SBATCH -c 2
 #SBATCH -n 1
 #SBATCH --mem=2GB
 #SBATCH --time=0-00:00:10
-date;hostname;pwd
 
 unset XDG_RUNTIME_DIR
 
 cd /n/data1/hms/neurobio/sabatini/rich/
 
-
 date
-module load gcc/9.2.0
 
+echo "loading modules"
+module load gcc/9.2.0 cuda/11.2
+
+echo "activating environment"
 source activate ROI_env
 
+echo "starting job"
 python "$@"
 """
 # module load gcc/9.2.0

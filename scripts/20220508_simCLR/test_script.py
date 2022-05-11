@@ -81,7 +81,7 @@ path_saveModel = str((dir_save / params['paths']['fileName_save_model']).with_su
 path_saveLog = str(dir_save / 'log.txt')
 path_saveLoss = (dir_save / 'loss.npy')
 
-device_train = torch_helpers.set_device(use_GPU=params['useGPU_training'], verbose=False)
+device_train = torch_helpers.set_device(use_GPU=True, verbose=False)
 
 print(device_train)
 
