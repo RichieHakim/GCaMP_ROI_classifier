@@ -148,8 +148,7 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 
 ## define slurm SBATCH parameters
 sbatch_config_default = \
-f"""
-#!/usr/bin/zsh
+f"""#!/usr/bin/zsh
 #SBATCH --job-name=jupyter
 #SBATCH --output={path_log}
 #SBATCH --partition=priority
@@ -165,6 +164,8 @@ cd /n/groups/datta/
 module load gcc/9.2.0 conda2
 source activate jupyter_launcher
 date
+
+python "$@"
 """
 
 # f"""#!/usr/bin/bash
