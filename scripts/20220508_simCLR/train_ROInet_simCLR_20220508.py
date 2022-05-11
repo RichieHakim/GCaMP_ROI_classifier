@@ -149,7 +149,7 @@ sys.path.append(str(Path(params['paths']['dir_github']) / 'GCaMP_ROI_classifier'
 
 # %load_ext autoreload
 # %autoreload 2
-from basic_neural_processing_modules import torch_helpers, math_functions, classification, h5_handling, plotting_helpers, indexing, misc, decomposition, path_helpers
+from basic_neural_processing_modules import torch_helpers, path_helpers
 from GCaMP_ROI_classifier import util, models, training, augmentation, dataset
 
 def write_to_log(path_log, text, mode='a', start_on_new_line=True):
