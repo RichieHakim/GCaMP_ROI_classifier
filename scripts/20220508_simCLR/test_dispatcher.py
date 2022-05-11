@@ -154,7 +154,7 @@ f"""#!/usr/bin/zsh
 #SBATCH --partition=priority
 #SBATCH -c 2
 #SBATCH -n 1
-#SBATCH --mem=100GB
+#SBATCH --mem=2GB
 #SBATCH --time=0-00:00:10
 date;hostname;pwd
 unset XDG_RUNTIME_DIR
@@ -162,7 +162,7 @@ port=$(shuf -i 50000-60000 -n 1)
 
 cd /n/groups/datta/
 module load gcc/9.2.0 conda2
-source activate jupyter_launcher
+source activate ROI_env
 date
 
 python "$@"
