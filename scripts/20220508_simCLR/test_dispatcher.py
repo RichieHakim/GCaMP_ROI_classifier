@@ -158,6 +158,8 @@ f"""#!/usr/bin/bash
 #SBATCH --time=0-00:00:10
 date;hostname;pwd
 
+unset XDG_RUNTIME_DIR
+
 cd /n/data1/hms/neurobio/sabatini/rich/
 
 
