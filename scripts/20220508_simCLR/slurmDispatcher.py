@@ -118,8 +118,8 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['dataloader_kwargs', 'prefetch_factor'], val) for val in [4,5,6]]
-params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
+params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03, 0.1, 0.3,]]
+# params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
 
@@ -149,14 +149,14 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 ## define slurm SBATCH parameters
 sbatch_config_default = \
 f"""#!/usr/bin/bash
-#SBATCH --job-name=python_test
+#SBATCH --job-name=simCLR_test
 #SBATCH --output={path_log}
 #SBATCH --partition=gpu_quad
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=100GB
-#SBATCH --time=0-01:00:00
+#SBATCH --time=0-00:10:00
 
 python "$@"
 """
@@ -165,7 +165,7 @@ python "$@"
 paths_scripts = [path_script]
 params_list = params
 sbatch_config_list = [sbatch_config_default]
-max_n_jobs=10
+max_n_jobs=3
 name_save='jobNum_'
 
 server.batch_run(paths_scripts=paths_scripts,
