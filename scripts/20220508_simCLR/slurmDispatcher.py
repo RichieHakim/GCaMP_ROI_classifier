@@ -154,10 +154,10 @@ f"""#!/usr/bin/bash
 #SBATCH --output={path_log}
 #SBATCH --partition=gpu_quad
 #SBATCH --gres=gpu:rtx8000:1
-#SBATCH -c 14
+#SBATCH -c 16
 #SBATCH -n 1
-#SBATCH --mem=14GB
-#SBATCH --time=0-00:01:00
+#SBATCH --mem=64GB
+#SBATCH --time=0-00:05:00
 
 unset XDG_RUNTIME_DIR
 
