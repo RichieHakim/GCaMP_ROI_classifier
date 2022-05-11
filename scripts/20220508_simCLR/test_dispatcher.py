@@ -162,6 +162,8 @@ cd /n/data1/hms/neurobio/sabatini/rich/
 
 module load gcc/9.2.0
 module load conda2
+
+source /etc/profile.d/modules.sh
 source activate ROI_env
 date
 
