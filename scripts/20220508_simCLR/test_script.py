@@ -17,6 +17,9 @@
 # !pip3 install numpy==1.20
 
 import sys
+print(sys.version_info)
+print(os.environ['CONDA_DEFAULT_ENV'])
+
 import os
 import copy
 import pathlib
