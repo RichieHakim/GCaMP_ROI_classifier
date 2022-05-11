@@ -118,7 +118,7 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03, 0.1, 0.3,]]
+params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03]]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
