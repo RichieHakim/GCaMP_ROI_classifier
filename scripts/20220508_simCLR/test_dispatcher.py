@@ -30,7 +30,7 @@ dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/202205
 path_log = str(Path(dir_save) / 'python_01_%j.log')
 
 # path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
-path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/test_script.py'
 
 
 params_template = {
@@ -153,10 +153,10 @@ f"""#!/usr/bin/bash
 #SBATCH --output={path_log}
 #SBATCH --partition=gpu_quad
 #SBATCH --gres=gpu:rtx8000:1
-#SBATCH -c 14
+#SBATCH -c 2
 #SBATCH -n 1
-#SBATCH --mem=14GB
-#SBATCH --time=0-00:01:00
+#SBATCH --mem=2GB
+#SBATCH --time=0-00:00:10
 
 cd /n/data1/hms/neurobio/sabatini/rich/
 module load gcc/9.2.0 cuda/11.2 conda2
