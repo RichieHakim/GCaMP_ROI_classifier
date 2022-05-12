@@ -25,7 +25,7 @@ from basic_neural_processing_modules import container_helpers, server
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_unfreeze'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_unfreeze_test'
 
 
 # path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
@@ -118,7 +118,7 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['block_to_unfreeze'], val) for val in ['5.7', '5.8']]
+params = [container_helpers.deep_update_dict(params, ['block_to_unfreeze'], val) for val in ['5.7', '5.8', '6.0']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -160,7 +160,7 @@ paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') f
 ## define slurm SBATCH parameters
 sbatch_config_list = \
 [f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_test
+#SBATCH --job-name=simCLR_uf1
 #SBATCH --output={path}
 #SBATCH --partition=gpu_quad
 #SBATCH --gres=gpu:rtx8000:1
