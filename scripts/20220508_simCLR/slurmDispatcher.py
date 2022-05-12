@@ -25,7 +25,7 @@ from basic_neural_processing_modules import container_helpers, server
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_unfreeze_test'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_poolingMethod'
 Path(dir_save).mkdir(parents=True, exist_ok=True)
 
 
@@ -122,7 +122,7 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['block_to_unfreeze'], val) for val in ['5.7', '5.8', '6.0']]
+params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -131,9 +131,7 @@ params_unchanging, params_changing = container_helpers.find_differences_across_d
 ## notes that will be saved as a text file
 notes = \
 """
-Testing out weird bug that changing the 'block_to_unfreeze' parameter causes the output to halt (?)
-at the beginning of training.
-'6.0' should work as it should be identical to old runs that worked.
+Testing out pooling method. AdaptiveMaxPool2d run should be redudant with the default in other runs.
 """
 
 with open(str(Path(dir_save) / 'notes.txt'), mode='a') as f:
@@ -175,10 +173,10 @@ paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') f
 ## define slurm SBATCH parameters
 sbatch_config_list = \
 [f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_uf1
+#SBATCH --job-name=simCLR_pool1
 #SBATCH --output={path}
-#SBATCH --partition=gpu_quad
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --partition=gpu_requeue
+#SBATCH --gres=gpu:rtx6000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
