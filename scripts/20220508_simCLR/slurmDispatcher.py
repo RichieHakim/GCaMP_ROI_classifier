@@ -25,7 +25,7 @@ from basic_neural_processing_modules import container_helpers, server
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_poolingMethod'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_testing'
 Path(dir_save).mkdir(parents=True, exist_ok=True)
 
 
@@ -122,7 +122,8 @@ params_template = {
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
+# params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
+params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveAvgPool2d']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -163,7 +164,7 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 paths_scripts = [path_script]
 params_list = params
 # sbatch_config_list = [sbatch_config]
-max_n_jobs=3
+max_n_jobs=1
 name_save='jobNum_'
 
 
@@ -173,14 +174,14 @@ paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') f
 ## define slurm SBATCH parameters
 sbatch_config_list = \
 [f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_pool1
+#SBATCH --job-name=simCLR_test
 #SBATCH --output={path}
 #SBATCH --partition=gpu_requeue
 #SBATCH --gres=gpu:rtx6000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
-#SBATCH --time=1-00:00:00
+#SBATCH --time=0-00:03:00
 
 unset XDG_RUNTIME_DIR
 
