@@ -66,12 +66,15 @@ params_template = {
 
     'torchvision_model': 'convnext_tiny',
 
+    'head_pool_method': 'AdaptiveAvgPool2d',
+    'head_pool_method_kwargs': {'output_size': 1},
     'pre_head_fc_sizes': [256, 128],
     'post_head_fc_sizes': [128],
     'block_to_unfreeze': '6.0',
     'n_block_toInclude': 9,
     'head_nonlinearity': 'GELU',
-    
+    'head_nonlinearity_kwargs': {},
+
     'lr': 1*10**-3,
     'penalty_orthogonality':0.00,
     'weight_decay': 0.0000,

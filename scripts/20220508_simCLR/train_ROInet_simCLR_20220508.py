@@ -458,7 +458,7 @@ if pref_log_all_steps:
     write_to_log(path_log=path_saveLog, text=f'time:{time.ctime()}  making combined model...')
 
 model_chopped = torch.nn.Sequential(list(base_model_frozen.children())[0][:params['n_block_toInclude']])  ## 0.
-model_chopped_pooled = torch.nn.Sequential(model_chopped, torch.nn.AdaptiveAvgPool2d(output_size=1), torch.nn.Flatten())  ## 1.
+model_chopped_pooled = torch.nn.Sequential(model_chopped, torch.nn.__dict__[params['head_pool_method']](**params['head_pool_method_kwargs']), torch.nn.Flatten())  ## 1.
 
 image_out_size = list(dataset_train[0][0][0].shape)
 data_dim = tuple([1] + list(image_out_size))
@@ -473,7 +473,7 @@ model = ModelTackOn(
     post_head_fc_sizes=params['post_head_fc_sizes'], 
     classifier_fc_sizes=None,
     nonlinearity=params['head_nonlinearity'],
-    kwargs_nonlinearity={},
+    kwargs_nonlinearity=params['head_nonlinearity_kwargs'],
 )
 model.train();
 
