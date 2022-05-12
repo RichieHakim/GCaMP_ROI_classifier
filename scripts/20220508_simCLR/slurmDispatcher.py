@@ -26,6 +26,7 @@ from basic_neural_processing_modules import container_helpers, server
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
 dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_unfreeze_test'
+Path(dir_save).mkdir(parents=True, exist_ok=True)
 
 
 # path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
@@ -139,7 +140,6 @@ with open(str(Path(dir_save) / 'notes.txt'), mode='a') as f:
 
 ## copy script .py file to dir_save
 import shutil
-Path(dir_save).mkdir(parents=True, exist_ok=True)
 shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 
