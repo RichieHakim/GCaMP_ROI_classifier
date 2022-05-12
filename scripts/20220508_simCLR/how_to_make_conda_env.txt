@@ -1,4 +1,4 @@
-conda create ROI_env python=3.8.12
+conda create --name ROI_env python=3.8.12
 
 conda activate ROI_env
 
