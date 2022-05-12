@@ -124,6 +124,18 @@ params = [container_helpers.deep_update_dict(params, ['block_to_unfreeze'], val)
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
 
 
+## notes that will be saved as a text file
+notes = \
+"""
+Testing out weird bug that changing the 'block_to_unfreeze' parameter causes the output to halt (?)
+at the beginning of training.
+'6.0' should work as it should be identical to old runs that worked.
+"""
+
+with open(str(Path(dir_save) / 'notes.txt'), mode='a') as f:
+    f.write(notes)
+
+
 
 ## copy script .py file to dir_save
 import shutil
