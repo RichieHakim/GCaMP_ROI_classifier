@@ -22,19 +22,8 @@ sys.path.append(dir_github)
 from basic_neural_processing_modules import container_helpers, server
 
 
-## set paths
-# dir_save = '/media/rich/bigSSD/'
-# dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_testing'
-Path(dir_save).mkdir(parents=True, exist_ok=True)
-
-
-# path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
-path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
-
 
 params_template = {
-    'pref_log_all_steps': True,
     'paths': {
         # 'dir_github': '/media/rich/Home_Linux_partition/github_repos',
         'dir_github': dir_github,
@@ -46,10 +35,10 @@ params_template = {
     'prefs': {
         'saveModelIteratively':True,
         'saveLogs':True,
+        'log_print':True,
+        'log_save':True,
     },
-    'pref_log_print': True,
-    'pref_log_save': True,
-    
+
     'useGPU_training': True,
     'useGPU_dataloader': False,
     'dataloader_kwargs':{
@@ -122,11 +111,19 @@ params_template = {
 
 
 
+## set paths
+# dir_save = '/media/rich/bigSSD/'
+# dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_testing'
+Path(dir_save).mkdir(parents=True, exist_ok=True)
+
+
+# path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-# params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
-params = [container_helpers.deep_update_dict(params, ['dataloader_kwargs', 'num_workers'], val) for val in [2,4,8,16]]
-# params = [params for val in ['test']]
+params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
