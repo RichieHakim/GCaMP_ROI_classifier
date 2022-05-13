@@ -114,7 +114,7 @@ params_template = {
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_testing'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_poolMethod'
 Path(dir_save).mkdir(parents=True, exist_ok=True)
 
 
@@ -177,14 +177,14 @@ paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') f
 ## define slurm SBATCH parameters
 sbatch_config_list = \
 [f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_test
+#SBATCH --job-name=simCLR_pool
 #SBATCH --output={path}
 #SBATCH --partition=gpu_requeue
 #SBATCH --gres=gpu:rtx6000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
-#SBATCH --time=0-00:05:00
+#SBATCH --time=1-00:00:00
 
 unset XDG_RUNTIME_DIR
 
