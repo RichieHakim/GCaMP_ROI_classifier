@@ -58,9 +58,9 @@ params_template = {
         # 'num_workers': 18,
         # 'persistent_workers': True,
         # 'prefetch_factor': 2,
-        'num_workers': 4,
-        'persistent_workers': True,
-        'prefetch_factor': 1,
+        # 'num_workers': 4,
+        # 'persistent_workers': True,
+        # 'prefetch_factor': 1,
     },
     'inner_batch_size': 256,
 
