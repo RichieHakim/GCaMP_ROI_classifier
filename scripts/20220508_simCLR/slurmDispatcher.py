@@ -66,7 +66,7 @@ params_template = {
     'head_nonlinearity': 'GELU',
     'head_nonlinearity_kwargs': {},
 
-    'lr': 1*10**-3,
+    'lr': 2*10**-3,
     'penalty_orthogonality':0.00,
     'weight_decay': 0.0000,
     'gamma': 1-0.0000,
@@ -114,7 +114,7 @@ params_template = {
 ## set paths
 # dir_save = '/media/rich/bigSSD/'
 # dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_unfrozen'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_preHeadDepth'
 Path(dir_save).mkdir(parents=True, exist_ok=True)
 
 
@@ -123,7 +123,7 @@ path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classi
 
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['block_to_unfreeze'], val) for val in ['5.5', '5.6', '5.7', '5.8', '6.0']]
+params = [container_helpers.deep_update_dict(params, ['pre_head_fc_sizes'], val) for val in [[256], [256, 128], [256, 128, 128], [256, 128, 128, 128]]]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -177,10 +177,10 @@ paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') f
 ## define slurm SBATCH parameters
 sbatch_config_list = \
 [f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_uf1
+#SBATCH --job-name=simCLR_phd1
 #SBATCH --output={path}
-#SBATCH --partition=gpu_quad
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --partition=gpu_requeue
+#SBATCH --gres=gpu:rtx6000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
