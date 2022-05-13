@@ -165,6 +165,7 @@ def epoch_step( dataloader,
                 validation_Object=None,
                 verbose=False,
                 verbose_update_period=100,
+                function_call_batch=None,
                
                 X_val=None,
                 y_val=None
@@ -213,6 +214,9 @@ def epoch_step( dataloader,
         loss_rolling_train (list):
             List of losses (passed through and appended)
     """
+
+    if function_call_batch is not None:
+        function_call_batch()
 
     def print_info(batch, n_batches, loss_train, loss_val, pos_over_neg, learning_rate, precis=5):
         print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, pos_over_neg: {pos_over_neg} lr: {learning_rate:.{precis}}')
