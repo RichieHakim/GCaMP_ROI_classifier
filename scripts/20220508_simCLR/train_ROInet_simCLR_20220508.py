@@ -153,7 +153,7 @@ sys.path.append(str(Path(params['paths']['dir_github']) / 'GCaMP_ROI_classifier'
 from basic_neural_processing_modules import torch_helpers, path_helpers
 from GCaMP_ROI_classifier import util, models, training, augmentation, dataset
 
-def write_to_log(path_log, text, mode='a', start_on_new_line=True, pref_print=True, pref_save=True):
+def write_to_log(text, path_log, mode='a', start_on_new_line=True, pref_print=True, pref_save=True):
     if pref_print:
         print(text)
     if pref_save:
@@ -588,7 +588,7 @@ for epoch in tqdm(range(params['n_epochs'])):
         inner_batch_size=params['inner_batch_size'],
         verbose=2,
         verbose_update_period=1,
-        function_call_batch=partial(write_to_log, path_log=path_saveLog, text='in batch loop')
+        log_function=partial(write_to_log, path_log=path_saveLog, pref_print=params['pref_log_print'], pref_save=params['pref_log_save']),
 
 #                                     do_validation=False,
 #                                     X_val=x_feed_through_val,

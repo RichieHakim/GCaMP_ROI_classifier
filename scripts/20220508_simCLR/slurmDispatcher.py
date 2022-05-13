@@ -125,7 +125,8 @@ params_template = {
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
 # params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
-params = [params for val in ['test']]
+params = [container_helpers.deep_update_dict(params, ['dataloader_kwargs', 'num_workers'], val) for val in [2,4,8,16]]
+# params = [params for val in ['test']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
