@@ -123,7 +123,7 @@ params_template = {
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
 # params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveMaxPool2d', 'AdaptiveAvgPool2d']]
-params = [container_helpers.deep_update_dict(params, ['head_pool_method'], val) for val in ['AdaptiveAvgPool2d']]
+params = [params for val in ['test']]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
@@ -132,8 +132,11 @@ params_unchanging, params_changing = container_helpers.find_differences_across_d
 ## notes that will be saved as a text file
 notes = \
 """
-Testing out pooling method. AdaptiveMaxPool2d run should be redudant with the default in other runs.
+The dataloader seems to have broken. Debugging.
 """
+# """
+# Testing out pooling method. AdaptiveMaxPool2d run should be redudant with the default in other runs.
+# """
 
 with open(str(Path(dir_save) / 'notes.txt'), mode='a') as f:
     f.write(notes)
@@ -181,7 +184,7 @@ sbatch_config_list = \
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
-#SBATCH --time=0-00:03:00
+#SBATCH --time=0-00:05:00
 
 unset XDG_RUNTIME_DIR
 
