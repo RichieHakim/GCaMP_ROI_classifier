@@ -167,7 +167,7 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 paths_scripts = [path_script]
 params_list = params
 # sbatch_config_list = [sbatch_config]
-max_n_jobs=4
+max_n_jobs=5
 name_save='jobNum_'
 
 
