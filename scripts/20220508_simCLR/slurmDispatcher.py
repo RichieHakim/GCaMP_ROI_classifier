@@ -22,19 +22,8 @@ sys.path.append(dir_github)
 from basic_neural_processing_modules import container_helpers, server
 
 
-## set paths
-# dir_save = '/media/rich/bigSSD/'
-# dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
-dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220510_testingSimCLRscript'
-
-path_log = str(Path(dir_save) / 'python_01_%j.log')
-
-# path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
-path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
-
 
 params_template = {
-    'pref_log_all_steps': True,
     'paths': {
         # 'dir_github': '/media/rich/Home_Linux_partition/github_repos',
         'dir_github': dir_github,
@@ -46,8 +35,10 @@ params_template = {
     'prefs': {
         'saveModelIteratively':True,
         'saveLogs':True,
+        'log_print':True,
+        'log_save':True,
     },
-    
+
     'useGPU_training': True,
     'useGPU_dataloader': False,
     'dataloader_kwargs':{
@@ -66,13 +57,16 @@ params_template = {
 
     'torchvision_model': 'convnext_tiny',
 
+    'head_pool_method': 'AdaptiveAvgPool2d',
+    'head_pool_method_kwargs': {'output_size': 1},
     'pre_head_fc_sizes': [256, 128],
     'post_head_fc_sizes': [128],
     'block_to_unfreeze': '6.0',
     'n_block_toInclude': 9,
     'head_nonlinearity': 'GELU',
-    
-    'lr': 1*10**-2.5,
+    'head_nonlinearity_kwargs': {},
+
+    'lr': 2*10**-3,
     'penalty_orthogonality':0.00,
     'weight_decay': 0.0000,
     'gamma': 1-0.0000,
@@ -117,18 +111,40 @@ params_template = {
 
 
 
+## set paths
+# dir_save = '/media/rich/bigSSD/'
+# dir_save = '/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/outputs'
+dir_save = '/n/data1/hms/neurobio/sabatini/rich/analysis/ROI_net_training/20220512_SimCLR_lr'
+Path(dir_save).mkdir(parents=True, exist_ok=True)
+
+
+# path_script = '/media/rich/Home_Linux_partition/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+path_script = '/n/data1/hms/neurobio/sabatini/rich/github_repos/GCaMP_ROI_classifier/scripts/20220508_simCLR/train_ROInet_simCLR_20220508.py'
+
 ## make params dicts with grid swept values
 params = copy.deepcopy(params_template)
-params = [container_helpers.deep_update_dict(params, ['temperature'], val) for val in [0.03, 0.1, 0.3]]
+params = [container_helpers.deep_update_dict(params, ['lr'], val) for val in [1*10**-2, 3*10**-3, 1*10**-3, 3*10**-4, 1*10**-4]]
 # params = container_helpers.flatten_list([[container_helpers.deep_update_dict(p, ['lr'], val) for val in [0.00001, 0.0001, 0.001]] for p in params])
 
 params_unchanging, params_changing = container_helpers.find_differences_across_dictionaries(params)
 
 
+## notes that will be saved as a text file
+notes = \
+"""
+The dataloader seems to have broken. Debugging.
+"""
+# """
+# Testing out pooling method. AdaptiveMaxPool2d run should be redudant with the default in other runs.
+# """
+
+with open(str(Path(dir_save) / 'notes.txt'), mode='a') as f:
+    f.write(notes)
+
+
 
 ## copy script .py file to dir_save
 import shutil
-Path(dir_save).mkdir(parents=True, exist_ok=True)
 shutil.copy2(path_script, str(Path(dir_save) / Path(path_script).name));
 
 
@@ -147,14 +163,24 @@ with open(str(Path(dir_save) / 'parameters_batch.json'), 'w') as f:
 #     test = json.load(f)
 
 
+## run batch_run function
+paths_scripts = [path_script]
+params_list = params
+# sbatch_config_list = [sbatch_config]
+max_n_jobs=5
+name_save='jobNum_'
+
+
+## define print log paths
+paths_log = [str(Path(dir_save) / f'{name_save}{jobNum}' / 'print_log_%j.log') for jobNum in range(len(params))]
 
 ## define slurm SBATCH parameters
-sbatch_config_default = \
-f"""#!/usr/bin/bash
-#SBATCH --job-name=simCLR_test
-#SBATCH --output={path_log}
-#SBATCH --partition=gpu_quad
-#SBATCH --gres=gpu:rtx8000:1
+sbatch_config_list = \
+[f"""#!/usr/bin/bash
+#SBATCH --job-name=simCLR_lr1
+#SBATCH --output={path}
+#SBATCH --partition=gpu_requeue
+#SBATCH --gres=gpu:rtx6000:1
 #SBATCH -c 16
 #SBATCH -n 1
 #SBATCH --mem=64GB
@@ -174,14 +200,7 @@ source activate ROI_env
 
 echo "starting job"
 python "$@"
-"""
-
-## run batch_run function
-paths_scripts = [path_script]
-params_list = params
-sbatch_config_list = [sbatch_config_default]
-max_n_jobs=3
-name_save='jobNum_'
+""" for path in paths_log]
 
 server.batch_run(paths_scripts=paths_scripts,
                     params_list=params_list,

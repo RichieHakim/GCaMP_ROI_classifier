@@ -165,6 +165,7 @@ def epoch_step( dataloader,
                 validation_Object=None,
                 verbose=False,
                 verbose_update_period=100,
+                log_function=print,
                
                 X_val=None,
                 y_val=None
@@ -215,9 +216,10 @@ def epoch_step( dataloader,
     """
 
     def print_info(batch, n_batches, loss_train, loss_val, pos_over_neg, learning_rate, precis=5):
-        print(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, pos_over_neg: {pos_over_neg} lr: {learning_rate:.{precis}}')
+        log_function(f'Iter: {batch}/{n_batches}, loss_train: {loss_train:.{precis}}, loss_val: {loss_val:.{precis}}, pos_over_neg: {pos_over_neg} lr: {learning_rate:.{precis}}')
 
     for i_batch, (X_batch, y_batch, idx_batch, sample_weights) in enumerate(dataloader):
+
         # for param in util.get_trainable_parameters(model):
         #     print(torch.linalg.norm(param))
 
