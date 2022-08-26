@@ -1,0 +1,74 @@
+Mon Jul 18 17:02:01 EDT 2022
+loading modules
+activating environment
+/var/spool/slurmd/job57531395/slurm_script: line 15: activate: No such file or directory
+starting job
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531403
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531404
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531405
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531406
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531407
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531408
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531409
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531410
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531411
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531412
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531413
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531414
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531415
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531417
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531418
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531419
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531420
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531421
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531422
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531423
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531424
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531425
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57531426
+Submitting job: job_name 0

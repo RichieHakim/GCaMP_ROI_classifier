@@ -1,0 +1,33 @@
+Mon Jun 27 22:45:35 EDT 2022
+loading modules
+activating environment
+/var/spool/slurmd/job55870350/slurm_script: line 15: activate: No such file or directory
+starting job
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined
+Traceback (most recent call last):
+  File "/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py", line 88, in <module>
+    "input_dir": param_sweep_run_dir,    
+NameError: name 'param_sweep_run_dir' is not defined

@@ -1,0 +1,14 @@
+Wed Jul 13 00:14:24 EDT 2022
+loading modules
+activating environment
+/var/spool/slurmd/job57078231/slurm_script: line 15: activate: No such file or directory
+starting job
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57078233
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57078234
+Submitting job: job_name 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 57078235
+Submitting job: job_name 0

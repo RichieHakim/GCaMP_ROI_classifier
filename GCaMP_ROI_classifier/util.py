@@ -12,7 +12,8 @@ from torch.utils.data import DataLoader
 
 import ctypes
 import multiprocessing as mp
-
+import torchvision
+import PIL
 
 ###############################################################################
 ############################## IMPORT STAT FILES ##############################
@@ -232,3 +233,27 @@ def get_trainable_parameters(model):
         if param.requires_grad:
             params_trainable.append(param)
     return params_trainable
+
+def resize_affine(img, scale, clamp_range=False):
+    """
+    Wrapper for torchvision.transforms.Resize.
+    Useful for resizing images to match the size of the images
+     used in the training of the neural network.
+    RH 2022
+    """
+    img_rs = np.array(torchvision.transforms.functional.affine(
+#         img=torch.as_tensor(img[None,...]),
+        img=PIL.Image.fromarray(img),
+        angle=0, translate=[0,0], shear=0,
+        scale=scale,
+        interpolation=torchvision.transforms.InterpolationMode.BICUBIC
+    ))
+    
+    if clamp_range:
+        clamp_high = img.max()
+        clamp_low = img.min()
+    
+        img_rs[img_rs>clamp_high] = clamp_high
+        img_rs[img_rs<clamp_low] = clamp_low
+    
+    return img_rs

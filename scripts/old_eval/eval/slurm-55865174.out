@@ -1,0 +1,33 @@
+Mon Jun 27 21:58:55 EDT 2022
+loading modules
+activating environment
+/var/spool/slurmd/job55865174/slurm_script: line 15: activate: No such file or directory
+starting job
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865218
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865219
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865222
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865223
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865224
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865225
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
+sbatch: Setting QOS to gpuquad_qos
+Submitted batch job 55865229
+/n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/dispatcher.py /n/data1/hms/neurobio/sabatini/josh/analysis/gcamp_eval /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/scripts/eval/eval-params-sweep.py 20220512_SimCLR_preHeadDepth /n/data1/hms/neurobio/sabatini/josh/github_repos/GCaMP_ROI_classifier/data/training/mouse2_6__20210409
+Submitting job: 20220512_SimCLR_preHeadDepth 0
