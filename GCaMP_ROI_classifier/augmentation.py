@@ -418,3 +418,45 @@ class Check_NaN(Module):
         return tensor
 
 
+class Random_occlusion(Module):
+    """
+    Randomly occludes a slice of the entire image.
+    RH 2022
+    """
+    def __init__(self, prob=0.5, size=(0.3, 0.5)):
+        """
+        Initializes the class.
+        Args:
+            prob (float):
+                Probability of occlusion.
+            size (2-tuple of floats):
+                Size of occlusion.
+                In percent of image size.
+                Will be pulled from uniform distribution.
+            seed (int):
+                Seed for random number generator.
+        """
+        super().__init__()
+        
+        self.prob = prob
+        self.size = size
+
+        self.rotator = torchvision.transforms.RandomRotation(
+            (-180,180),
+            # interpolation='nearest', 
+            expand=False, 
+            center=None, 
+            fill=0,
+        )
+        
+    def forward(self, tensor):
+        if torch.rand(1) < self.prob:
+            size_rand = torch.rand(1) * (self.size[1] - self.size[0]) + self.size[0]
+            idx_rand = (torch.ceil(tensor.shape[1] * (1-size_rand)).item() , 0)
+            mask = torch.ones_like(tensor)
+            mask[:, idx_rand[0]:, :] = torch.zeros(1)
+
+            out = tensor * self.rotator(mask).type(torch.bool)
+            return out
+        else:
+            return tensor
